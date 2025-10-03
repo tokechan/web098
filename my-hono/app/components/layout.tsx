@@ -47,8 +47,8 @@ const containerClass =css`
 `;
 
 const links = [
-  { href: "/posts", text: "Posts" },
-  { href: "/posts/create", text: "Create" },
+  { href: "/blogs", text: "Posts" },
+  { href: "/blogs/create", text: "Create" },
 ];
 
 export const Layout: FC = ({ children }) => {
