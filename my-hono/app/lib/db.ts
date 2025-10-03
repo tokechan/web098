@@ -25,3 +25,10 @@ export const createPost = async ({
 
   return post;
 };
+
+export const getPosts = async () => {
+  const postsJSON = await fs.readFile("./data/posts.json", {
+    encoding: "utf-8",
+  });
+  return JSON.parse(postsJSON) as Post[];
+};

@@ -3,6 +3,7 @@ import { createRoute } from "honox/factory";
 import type { FC } from "hono/jsx";
 import { z }  from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { createPost } from "../../lib/db";
 
 const titleClass = css`
   font-size: 1.5rem;
@@ -135,6 +136,9 @@ export const POST = createRoute(
       async (c) => {
         const { title, content } = c.req.valid("form");
         console.log({ title, content });
+        await createPost({ title, content });
+
         return c.redirect("/blogs", 303);
       }
 );
+
