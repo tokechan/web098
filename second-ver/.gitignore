@@ -2,6 +2,7 @@
 dist/
 
 # dev
+.vite/
 .hono/
 .wrangler/
 .yarn/
@@ -15,6 +16,7 @@ dist/
 
 # deps
 node_modules/
+
 
 # env
 .env
