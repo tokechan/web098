@@ -1,6 +1,7 @@
 import { css, cx } from 'hono/css';
 import type { FC } from 'hono/jsx';
 import { useRequestContext } from 'hono/jsx-renderer';
+import NavToggle from '../islands/NavToggle';
 
 const headerClass = css`
   border-bottom: 1px solid #ddd;
@@ -18,8 +19,25 @@ const titleClass = css`
 `;
 
 const navClass = css`
-  display: flex;
+  /* mobile close */
+  display: none;
+  flex-direction: column;
   gap: 0.25rem;
+  padding: 0.5rem 0;
+
+  /*PC allways aling */
+  @media (min-width: 768px) {
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  /* Islandが data-open="true" を付けたら、モバイルでも表示 */
+  &[data-open='true'] {
+    display: flex;
+  }
 `;
 
 const linkBase = css`
@@ -63,7 +81,15 @@ export const Header: FC<{ links?: readonly NavLink[] }> = ({
           tokec&apos;s web site
         </a>
       </h1>
-      <nav class={navClass} aria-label="Primary">
+      {/* ★ モバイル用トグル（Island） */}
+      <NavToggle target="primary-nav" />
+      {/* メニュー本体（SSR)初期はdata-open='fales' */}
+      <nav
+        id="primary-nav"
+        class={navClass}
+        data-open="false"
+        aria-label="Primary"
+      >
         {navLinks.map((link) => {
           const isActive =
             current === link.href || current.startsWith(link.href + '/');
