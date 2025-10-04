@@ -39,17 +39,31 @@ const icon = css`
   color: rgb(22, 194, 19);
 `;
 
-export default function NavToggle(props: { target: string }) {
+export default function NavToggle(props: {
+  target: string;
+  backdropId?: string;
+}) {
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    console.log('[NavToggle] mounted');
-  }, []);
   // ターゲットnavの open 属性を同期
   useEffect(() => {
     const nav = document.getElementById(props.target);
     if (nav) nav.setAttribute('data-open', String(open));
-  }, [open, props.target]);
+    const bd = props.backdropId
+      ? document.getElementById(props.backdropId)
+      : null;
+    if (bd) bd.setAttribute('data-open', String(open));
+  }, [open, props.target, props.backdropId]);
+
+  //オーバレイクリックで閉じる
+  useEffect(() => {
+    if (!props.backdropId) return;
+    const bd = document.getElementById(props.backdropId);
+    if (!bd) return;
+    const onClick = () => setOpen(false);
+    bd.addEventListener('click', onClick);
+    return () => bd.removeEventListener('click', onClick);
+  }, [props.backdropId]);
 
   // Escで閉じる
   useEffect(() => {

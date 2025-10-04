@@ -19,24 +19,60 @@ const titleClass = css`
 `;
 
 const navClass = css`
-  /* mobile close */
+  /* モバイルは右から出る引き出し（初期は非表示） */
   display: none;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem 0;
+  gap: 0.5rem;
+  padding: 1rem;
 
-  /*PC allways aling */
+  /* 🟢 モバイル幅で右からスライドイン（<=767px） */
+  @media (max-width: 767px) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(80vw, 320px);
+    background: #fff;
+    box-shadow: -12px 0 24px rgba(0, 0, 0, 0.15);
+    z-index: 40;
+    transform: translateX(100%);
+    transition: transform 160ms ease;
+  }
+
+  /* 🖥 PCは従来どおり横並び常時表示（>=768px） */
   @media (min-width: 768px) {
     display: flex;
     flex-direction: row;
     padding: 0;
     align-items: center;
     gap: 0.25rem;
+    position: static;
+    transform: none;
+    box-shadow: none;
+    width: auto;
   }
 
-  /* Islandが data-open="true" を付けたら、モバイルでも表示 */
+  /* Island が data-open="true" を付けたらモバイルでも開く */
   &[data-open='true'] {
     display: flex;
+    @media (max-width: 767px) {
+      transform: translateX(0);
+    }
+  }
+`;
+
+const backdropClass = css`
+  display: none;
+
+  @media (max-width: 767px) {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 30;
+  }
+
+  &[data-open='true'] {
+    display: block;
   }
 `;
 
@@ -82,7 +118,8 @@ export const Header: FC<{ links?: readonly NavLink[] }> = ({
         </a>
       </h1>
       {/* ★ モバイル用トグル（Island） */}
-      <NavToggle target="primary-nav" />
+      <NavToggle target="primary-nav" backdropId="nav-backdrop" />
+      <div id="nav-backdrop" class={backdropClass} data-open="false" />
       {/* メニュー本体（SSR)初期はdata-open='fales' */}
       <nav
         id="primary-nav"
