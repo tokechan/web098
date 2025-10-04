@@ -7,6 +7,7 @@ import ssg from '@hono/vite-ssg';
 import mdx from '@mdx-js/rollup';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
+import rehypePrettyCode from 'rehype-pretty-code';
 
 const entry = './app/server.ts';
 
@@ -18,6 +19,19 @@ export default defineConfig({
     }),
     mdx({
       remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
+      rehypePlugins: [
+        [
+          rehypePrettyCode,
+          {
+            theme: {
+              light: 'One Light',
+              dark: 'Kanagawa Wave',
+            },
+            keepBackground: false,
+            defaultLang: 'ts',
+          },
+        ],
+      ],
     }),
     ssg({ entry }),
     tailwindcss(),

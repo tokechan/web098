@@ -1,0 +1,16 @@
+---
+title: Honox SSG 運用Tips
+date: 2025-10-05
+description: Honox + Vite SSGでやらかしがちなポイントのメモ
+tags: [honox, ssg, mdx]
+draft: false
+---
+
+## よくあるハマり
+
+- `import.meta.glob` は**パスがズレると一生見つからない**（パス確認！）
+- 画像は `/public/**` に置こう（Vite の静的配信）
+
+```ts title="app/routes/blog/index.tsx の注意"
+const modules = import.meta.glob('/content/blog/**/*.mdx', { eager: true });
+```

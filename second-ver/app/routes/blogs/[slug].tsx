@@ -13,7 +13,7 @@ export default createRoute(async (c) => {
   return c.render(
     <article class="prose mx-auto p-6">
       <title>{frontmatter?.title ?? ''}</title>
-      <h1>{frontmatter?.title}</h1>
+      <h1>{frontmatter?.title ?? ''}</h1>
       <MDX />
     </article>
   );
