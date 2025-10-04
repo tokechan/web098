@@ -73,6 +73,36 @@ export default function NavToggle(props: {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+  //背景スクロール固定（開いてる間）
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // 追加: メニュー内リンクをクリックしたら閉じる
+  useEffect(() => {
+    const nav = document.getElementById(props.target);
+    if (!nav) return;
+
+    const onClick = (e: Event) => {
+      // aタグか a内の子要素をクリックしたら閉じる
+      const anchor = (e.target as HTMLElement).closest('a');
+      if (!anchor) return;
+
+      // 中クリック/新規タブ(⌘/Ctrl)だけは閉じない…にするなら下を有効化
+      // const me = e as MouseEvent;
+      // if (me.button === 1 || me.metaKey || me.ctrlKey) return;
+
+      setOpen(false);
+    };
+
+    nav.addEventListener('click', onClick);
+    return () => nav.removeEventListener('click', onClick);
+  }, [props.target]);
 
   return (
     <button
