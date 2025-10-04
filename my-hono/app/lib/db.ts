@@ -27,9 +27,10 @@ export const createPost = async ({
   return post;
 };
 
-export const getPosts = async () => {
+export const getPosts = async (id: string) => {
   const postsJSON = await fs.readFile('./data/posts.json', {
     encoding: 'utf-8',
   });
-  return JSON.parse(postsJSON) as Post[];
+  const posts = JSON.parse(postsJSON) as Post[];
+  return posts.find((post) => post.id === id);
 };
