@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import { toSlug } from './slug';
 
 export type Post = {
   id: string;
@@ -18,9 +19,10 @@ export const createPost = async ({
   });
   const posts: Post[] = JSON.parse(articlesJSON);
   const id = crypto.randomUUID();
+  const slug = toSlug(title);
   const created_at = new Date().toISOString();
   const updated_at = created_at;
-  const post: Post = { id, title, content, created_at, updated_at };
+  const post: Post = { id, slug, title, content, created_at, updated_at };
   posts.push(post);
   await fs.writeFile('./data/posts.json', JSON.stringify(posts));
 
@@ -33,4 +35,12 @@ export const getPosts = async (id: string) => {
   });
   const posts = JSON.parse(postsJSON) as Post[];
   return posts.find((post) => post.id === id);
+};
+
+export const getPostBySlug = async (slug: string) => {
+  const postsJSON = await fs.readFile('./data/posts.json', {
+    encoding: 'utf-8',
+  });
+  const posts = JSON.parse(postsJSON) as Post[];
+  return posts.find((post) => post.slug === slug);
 };

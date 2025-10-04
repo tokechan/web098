@@ -1,21 +1,68 @@
-import {createRoute } from 'honox/factory'
+import { createRoute } from 'honox/factory';
+import { Post, getPostBySlug } from '../../lib/db';
+import { css } from 'hono/css';
+import create from './create';
+import { FC } from 'hono/jsx';
+import { parseMarkdown } from '../../lib/markdown';
+
+const cardClass = css`
+  border: 3px solid rgba(248, 11, 173, 0.43);
+  border-radius: 3px;
+  padding: 1px;
+  widht: 100%;
+`;
+
+const titleClass = css`
+  font-size: 2rem;
+  margin-bottom: 1rem;
+`;
+
+const contentClass = css`
+  margin-top: 1.5rem;
+
+  p + p {
+    margin-top: 1rem;
+  }
+
+  ul {
+    margin-top: 1rem;
+  }
+
+  ul li {
+    list-style: disc;
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+  }
+`;
+
+type Props = {
+  post: Post;
+  content: string;
+};
+
+const Page: FC<Props> = ({ post, content }) => {
+  return (
+    <article class={cardClass}>
+      <header>
+        <h1 class={titleClass}>{post.title}</h1>
+      </header>
+      <div
+        class={contentClass}
+        id="contents"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    </article>
+  );
+};
 
 export default createRoute(async (c) => {
-  const  { slug } = c.req.param()
-  const post = await getPost(slug)
-  if (!post) return c.render(<h1>Not Found</h1>)
-  return c.render(
-    <article>
-      <h1>{post.title}</h1>
-      <div dangerouslySetInnerHTML={{ __html: post.html }} />
-    </article>
-  )
-})
-
-async function getPost(slug: string) {
-  const map: Record<string, { title: string; html: string }> = {
-    'hello-honox': {title: 'Good evning honox', html: '<p>Wellcome!!<p>'},
-    'routing-notes': {title: 'Routing memo', html: '<p>file base routing is cool!!</p>'},
+  const { slug } = c.req.param();
+  const post = await getPostBySlug(slug);
+  if (!post) {
+    return c.notFound();
   }
-  return map[slug]
-}
+
+  const content = parseMarkdown(post.content);
+
+  return c.render(<Page post={post} content={content} />);
+});
