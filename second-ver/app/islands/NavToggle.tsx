@@ -39,17 +39,31 @@ const icon = css`
   color: rgb(22, 194, 19);
 `;
 
-export default function NavToggle(props: { target: string }) {
+export default function NavToggle(props: {
+  target: string;
+  backdropId?: string;
+}) {
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    console.log('[NavToggle] mounted');
-  }, []);
   // ターゲットnavの open 属性を同期
   useEffect(() => {
     const nav = document.getElementById(props.target);
     if (nav) nav.setAttribute('data-open', String(open));
-  }, [open, props.target]);
+    const bd = props.backdropId
+      ? document.getElementById(props.backdropId)
+      : null;
+    if (bd) bd.setAttribute('data-open', String(open));
+  }, [open, props.target, props.backdropId]);
+
+  //オーバレイクリックで閉じる
+  useEffect(() => {
+    if (!props.backdropId) return;
+    const bd = document.getElementById(props.backdropId);
+    if (!bd) return;
+    const onClick = () => setOpen(false);
+    bd.addEventListener('click', onClick);
+    return () => bd.removeEventListener('click', onClick);
+  }, [props.backdropId]);
 
   // Escで閉じる
   useEffect(() => {
@@ -59,6 +73,36 @@ export default function NavToggle(props: { target: string }) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+  //背景スクロール固定（開いてる間）
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // 追加: メニュー内リンクをクリックしたら閉じる
+  useEffect(() => {
+    const nav = document.getElementById(props.target);
+    if (!nav) return;
+
+    const onClick = (e: Event) => {
+      // aタグか a内の子要素をクリックしたら閉じる
+      const anchor = (e.target as HTMLElement).closest('a');
+      if (!anchor) return;
+
+      // 中クリック/新規タブ(⌘/Ctrl)だけは閉じない…にするなら下を有効化
+      // const me = e as MouseEvent;
+      // if (me.button === 1 || me.metaKey || me.ctrlKey) return;
+
+      setOpen(false);
+    };
+
+    nav.addEventListener('click', onClick);
+    return () => nav.removeEventListener('click', onClick);
+  }, [props.target]);
 
   return (
     <button
