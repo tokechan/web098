@@ -6,7 +6,7 @@
     "strict": true,
     "skipLibCheck": true,
     "lib": ["ESNext", "DOM"],
-    "types": ["node", "vite/client", "@cloudflare/workers-types/2023-07-01"],
+    "types": ["node", "hono/jsx", "vite/client", "@cloudflare/workers-types/2023-07-01"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx"
   },

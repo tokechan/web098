@@ -18,14 +18,15 @@ export default defineConfig({
       client: { input: ['/app/client.ts', '/app/style.css'] },
     }),
     mdx({
+      jsxImportSource: 'hono/jsx',
       remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter],
       rehypePlugins: [
         [
           rehypePrettyCode,
           {
             theme: {
-              light: 'One Light',
-              dark: 'Kanagawa Wave',
+              light: 'vitesse-light',
+              dark: 'vitesse-dark',
             },
             keepBackground: false,
             defaultLang: 'ts',
