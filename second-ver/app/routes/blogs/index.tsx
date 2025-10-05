@@ -2,6 +2,7 @@ import { createRoute } from 'honox/factory';
 import { css, keyframes } from 'hono/css';
 import type { FC } from 'hono/jsx';
 import { toSlug } from '../../lib/slug';
+import { postUrl } from '../../lib/paths';
 
 type PostMod = {
   frontmatter?: { 
@@ -137,12 +138,12 @@ export default createRoute((c) =>
   c.render(
     <main class={mainClass}>
       <h1 class={pageTitle}>Blog</h1>
-      <ul class={grid}>
+      <ul role="list" class={grid}>
         {posts.map((p) => (
           <li class={card} key={p.slug}>
             <article>
               <h2 class={articleTitle}>
-                <a href={`/blogs/${p.slug}`}>
+                <a href={postUrl(p.slug)}>
                   {p.title}
                 </a>
               </h2>
