@@ -14,13 +14,13 @@ export default jsxRenderer(({ children, title }) => {
         <link rel="icon" href="/favicon.ico" />
         <Script src="/app/client.ts" async />
         <Style />
-        {/* <style>{`
+        <style>{`
             :root {  color-scheme: light dark; }
             html { font-size: 18px; font-family: system-ui, sans-serif; }
             body { min-height: 100vh; color:rgba(7, 0, 106, 0.99); background: #f4f4f4; }
             *,*::before,*::after { box-sizing: border-box; margin:0; padding:0; }
             a:focus-visible { outline: 2px solid rgb(1, 6, 106); outline-offset: 2px; }
-          `}</style> */}
+          `}</style>
       </head>
       <body class={tokens}>
         <Layout>{children}</Layout>
