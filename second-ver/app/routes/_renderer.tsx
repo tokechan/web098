@@ -1,6 +1,7 @@
 import { jsxRenderer } from 'hono/jsx-renderer';
 import { Link, Script } from 'honox/server';
 import { Style, css } from 'hono/css';
+import { tokens } from '../styles/tokens';
 import { Layout } from '../components/Layout';
 
 export default jsxRenderer(({ children, title }) => {
@@ -12,35 +13,16 @@ export default jsxRenderer(({ children, title }) => {
         <title>{title}</title>
         <link rel="icon" href="/favicon.ico" />
         <Script src="/app/client.ts" async />
-        <Style>
-          {css`
-            :root {
-              color-scheme: light dark;
-            }
-            html {
-              font-size: 16px;
-              font-family: system-ui, sans-serif;
-            }
-            body {
-              min-height: 100vh;
-              color: #262626;
-              background-color: #f4f4f4;
-            }
-            *,
-            *::before,
-            *::after {
-              box-sizing: border-box;
-              margin: 0;
-              padding: 0;
-            }
-            a:focus-visible {
-              outline: 2px solid #646cff;
-              outline-offset: 2px;
-            }
-          `}
-        </Style>
+        <Style />
+        {/* <style>{`
+            :root {  color-scheme: light dark; }
+            html { font-size: 18px; font-family: system-ui, sans-serif; }
+            body { min-height: 100vh; color:rgba(7, 0, 106, 0.99); background: #f4f4f4; }
+            *,*::before,*::after { box-sizing: border-box; margin:0; padding:0; }
+            a:focus-visible { outline: 2px solid rgb(1, 6, 106); outline-offset: 2px; }
+          `}</style> */}
       </head>
-      <body>
+      <body class={tokens}>
         <Layout>{children}</Layout>
       </body>
     </html>

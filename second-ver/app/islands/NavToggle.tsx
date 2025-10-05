@@ -39,14 +39,15 @@ const icon = css`
   color: rgb(22, 194, 19);
 `;
 
-export default function NavToggle(props: {
-  target: string;
-  backdropId?: string;
-}) {
+const isBrowser = () =>
+  typeof window !== 'undefined' && typeof document !== 'undefined';
+
+export default function NavToggle(props: { target: string; backdropId?: string }) {
   const [open, setOpen] = useState(false);
 
   // ターゲットnavの open 属性を同期
   useEffect(() => {
+    if (!isBrowser()) return;
     const nav = document.getElementById(props.target);
     if (nav) nav.setAttribute('data-open', String(open));
     const bd = props.backdropId
@@ -55,9 +56,9 @@ export default function NavToggle(props: {
     if (bd) bd.setAttribute('data-open', String(open));
   }, [open, props.target, props.backdropId]);
 
-  //オーバレイクリックで閉じる
+  // オーバレイクリックで閉じる
   useEffect(() => {
-    if (!props.backdropId) return;
+    if (!isBrowser() || !props.backdropId) return;
     const bd = document.getElementById(props.backdropId);
     if (!bd) return;
     const onClick = () => setOpen(false);
@@ -67,15 +68,17 @@ export default function NavToggle(props: {
 
   // Escで閉じる
   useEffect(() => {
+    if (!isBrowser()) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-  //背景スクロール固定（開いてる間）
+
+  // 背景スクロール固定（開いてる間）
   useEffect(() => {
-    if (!open) return;
+    if (!isBrowser() || !open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
@@ -83,23 +86,16 @@ export default function NavToggle(props: {
     };
   }, [open]);
 
-  // 追加: メニュー内リンクをクリックしたら閉じる
+  // メニュー内リンククリックで閉じる
   useEffect(() => {
+    if (!isBrowser()) return;
     const nav = document.getElementById(props.target);
     if (!nav) return;
-
     const onClick = (e: Event) => {
-      // aタグか a内の子要素をクリックしたら閉じる
       const anchor = (e.target as HTMLElement).closest('a');
       if (!anchor) return;
-
-      // 中クリック/新規タブ(⌘/Ctrl)だけは閉じない…にするなら下を有効化
-      // const me = e as MouseEvent;
-      // if (me.button === 1 || me.metaKey || me.ctrlKey) return;
-
       setOpen(false);
     };
-
     nav.addEventListener('click', onClick);
     return () => nav.removeEventListener('click', onClick);
   }, [props.target]);
@@ -112,9 +108,7 @@ export default function NavToggle(props: {
       aria-controls={props.target}
       onClick={() => setOpen((o) => !o)}
     >
-      <span aria-hidden="true" class={icon}>
-        ☰
-      </span>
+      <span aria-hidden="true" class={icon}>☰</span>
       <span class={srOnly}>メニュー</span>
     </button>
   );
