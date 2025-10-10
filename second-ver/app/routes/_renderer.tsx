@@ -1,8 +1,9 @@
 import { jsxRenderer } from 'hono/jsx-renderer';
 import { Link, Script } from 'honox/server';
-import { Style, css } from 'hono/css';
-import { tokens } from '../styles/tokens';
+import { Style } from 'hono/css';
 import { Layout } from '../components/Layout';
+
+
 
 export default jsxRenderer(({ children, title }) => {
   return (
@@ -12,17 +13,17 @@ export default jsxRenderer(({ children, title }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title}</title>
         <link rel="icon" href="/favicon.ico" />
+        {/* CSS をheadにリンクで載せる */}
+        <link rel="stylesheet" href="/app/style.css" />
+        <link rel="stylesheet" href="/app/styles/global.css" />
+
+
+
         <Script src="/app/client.ts" async />
-        <Style />
-        <style>{`
-            :root {  color-scheme: light dark; }
-            html { font-size: 18px; font-family: system-ui, sans-serif; }
-            body { min-height: 100vh; color:rgba(7, 0, 106, 0.99); background: #f4f4f4; }
-            *,*::before,*::after { box-sizing: border-box; margin:0; padding:0; }
-            a:focus-visible { outline: 2px solid rgb(1, 6, 106); outline-offset: 2px; }
-          `}</style>
+        <Style />{/* hono/cssの出力　*/}
+      
       </head>
-      <body class={tokens}>
+      <body>
         <Layout>{children}</Layout>
       </body>
     </html>

@@ -1,0 +1,31 @@
+:root {
+    /* === Base Layer === */
+    --color-bg: #F8F8F6;
+    --color-text: #0F0F0F;
+    --color-muted: #555555;
+  
+    /* === Accent Layer === */
+    --color-accent: #3F704D;
+    --color-accent-hover: #4B8E5A;
+    --color-secondary: #B67A4F;
+  
+    /* === Structure === */
+    --color-border: #D8D8D3;
+    --color-bg-card: #FFFFFF;
+  
+    /* === Typography === */
+    --font-sans: 'Inter', 'Noto Sans JP', sans-serif;
+    --font-serif: 'Playfair Display', serif;
+    --line-height-base: 1.75;
+    --letter-spacing-wide: 0.03em;
+  
+    /* === Spacing / Radius === */
+    --space-1: .25rem;
+    --space-2: .5rem;
+    --space-3: .75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --radius-md: .375rem;
+  }
+  
