@@ -1,24 +1,53 @@
-import { css } from 'hono/css';
+// import { css } from 'hono/css';
 
-export const tokens = css`
-  --container-max: 48rem;
-  --space-1: .25rem;
-  --space-2: .5rem;
-  --space-3: .75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;    /* 20px 推奨 */
-  --space-6: 1.5rem;     /* 24px */
-  --space-7: 2rem;
-  --space-8: 2.5rem;
-  --space-9: 3rem;
+// export const tokens = css`
+//   --container-max: 48rem;
+//   --space-1: .25rem;
+//   --space-2: .5rem;
+//   --space-3: .75rem;
+//   --space-4: 1rem;
+//   --space-5: 1.25rem;    /* 20px 推奨 */
+//   --space-6: 1.5rem;     /* 24px */
+//   --space-7: 2rem;
+//   --space-8: 2.5rem;
+//   --space-9: 3rem;
 
-  --radius-sm: .25rem;
-  --radius-md: .375rem;
-  --radius-lg: .5rem;
+//   --radius-sm: .25rem;
+//   --radius-md: .375rem;
+//   --radius-lg: .5rem;
 
-  --border-strong: 3px;
-  --color-border: rgba(0, 0, 71, 0.83);
-  --color-link:   rgba(30, 30, 203, 0.83);
-  --color-text:   rgba(28, 28, 151, 0.83);
-  --color-muted:  rgba(43, 48, 73, 0.66);
-`;
+//   --border-strong: 3px;
+//   --color-border: rgba(0, 0, 71, 0.83);
+//   --color-link:   rgba(30, 30, 203, 0.83);
+//   --color-text:   rgba(28, 28, 151, 0.83);
+//   --color-muted:  rgba(43, 48, 73, 0.66);
+// `;
+
+
+
+// app/styles/tokens.ts
+import { css } from 'hono/css'
+
+export const container = css`
+  width: min(100%, var(--container-max));
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+`
+
+export const card = css`
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+`
+
+export const linkReset = css`
+  text-decoration: none;
+  color: var(--color-accent);
+  border-bottom: 1px solid transparent;
+  transition: color .2s ease, border-color .2s ease;
+  &:hover {
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
+  }
+`

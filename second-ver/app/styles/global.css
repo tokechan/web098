@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap');
+@import './theme.css';
+
+/* == Base Reset == */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: var(--line-height-base);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+
+/* == Links == */
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+
+/* == Headings == */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  margin: 0 0 var(--space-3) 0;
+}
+
+/* == Layout basics == */
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+
+/* == Responsive == */

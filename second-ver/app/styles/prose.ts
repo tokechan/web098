@@ -1,7 +1,7 @@
 import { css } from 'hono/css';
 
 export const prose = css`
-  line-height: 1.6;
+  line-height: var(--line-height-base);
   color: var(--color-text);
 
   h1, h2, h3, h4, h5 {

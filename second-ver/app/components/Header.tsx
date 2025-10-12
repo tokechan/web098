@@ -1,51 +1,260 @@
+// import { css, cx } from 'hono/css';
+// import type { FC } from 'hono/jsx';
+// import { useRequestContext } from 'hono/jsx-renderer';
+// import NavToggle from '../islands/NavToggle';
+// import { container } from '../styles/tokens';
+// import { prose } from '../styles/prose';
+
+// const headerClass = css`
+//   border-bottom: 1px solid  var(--color-border);
+//   display: flex;
+//   gap: 1rem;
+//   align-items: center;
+//   padding: 0.75rem 1rem;
+//   justify-content: space-between;
+//   background: var(--color-bg);
+//   color: var(--color-text);
+// `;
+
+// const titleClass = css`
+//   fontfamily: var(--font-serif);
+//   font-size: 1.6rem;
+//   margin: 0;
+
+//   a {
+//     color: var(--color-text);
+//     text-decoration: none;
+//     border-bottom: 2px solid transparent;
+//     transition: color 0.3s ease, border-color 0.3s ease;
+
+//     &:hover {
+//     color: var(--color-secondary);
+//     border-color: var(--color-secondary);
+//     }
+//   }
+// `;
+
+// const navClass = css`
+//   /* モバイルは右から出る引き出し（初期は非表示） */
+//   display: none;
+//   flex-direction: column;
+//   gap: 0.75rem;
+//   padding: 1rem;
+
+//   /* 🟢 モバイル幅で右からスライドイン（<=767px） */
+//   @media (max-width: 767px) {
+//     position: fixed;
+//     top: 0;
+//     right: 0;
+//     bottom: 0;
+//     width: min(80vw, 320px);
+//     background: var(--color-bg);
+//     box-shadow: -12px 0 24px rgba(0, 0, 0, 0.15);
+//     z-index: 40;
+//     transform: translateX(100%);
+//     transition: transform 160ms ease;
+//   }
+
+//   /* 🖥 PCは従来どおり横並び常時表示（>=768px） */
+//   @media (min-width: 768px) {
+//     display: flex;
+//     flex-direction: row;
+//     padding: 0;
+//     align-items: center;
+//     gap: 0.5rem;
+//     position: static;
+//     transform: none;
+//     box-shadow: none;
+//     width: auto;
+//   }
+
+//   /* Island が data-open="true" を付けたらモバイルでも開く */
+//   &[data-open='true'] {
+//     display: flex;
+//     @media (max-width: 767px) {
+//       transform: translateX(0);
+//     }
+//   }
+// `;
+
+// const backdropClass = css`
+//   display: none;
+
+//   @media (max-width: 767px) {
+//     position: fixed;
+//     inset: 0;
+//     background: rgba(0, 0, 0, 0.35);
+//     z-index: 30;
+//   }
+
+//   &[data-open='true'] {
+//     display: block;
+//   }
+// `;
+
+// const linkBase = css`
+//   display: inline-block; /* padding有効化 */
+//   text-decoration: none;
+//   padding: 0.6rem 0.9rem;
+//   color: var(--color-text);
+//   border-radius: 6px;
+//   transition: background-color 120ms ease;
+  
+//   &:hover {
+//     background-color: rgba(182, 122, 79, 0.08);
+//   }
+
+//   &:focus-visible {
+//     outline: 2px solid var(--color-accent);
+//     outline-offset: 2px;
+//   }
+// `;
+
+// const activeLinkClass = css`
+//   background-color: rgba(63, 112, 77, 0.1);
+//   color: var(--color-accent);
+//   font-weight: 600;
+// `;
+
+// export type NavLink = { href: string; text: string };
+
+// const defaultLinks: readonly NavLink[] = [
+//   { href: '/', text: 'Home' },
+//   { href: '/blogs', text: 'Blogs' },
+//   { href: '/labs', text: 'Labs' },
+// ] as const;
+
+// export const Header: FC<{ links?: readonly NavLink[] }> = ({
+//   links: navLinks = defaultLinks,
+// }) => {
+//   const c = useRequestContext();
+//   const current = c.req.path;
+
+//   return (
+//     <header class={headerClass}>
+//       <h1 class={titleClass}>
+//         <a href="/" class={linkBase}>
+//           tokec&apos;s web site
+//         </a>
+//       </h1>
+//       {/* ★ モバイル用トグル（Island） */}
+//       <NavToggle target="primary-nav" backdropId="nav-backdrop" />
+//       <div id="nav-backdrop" class={backdropClass} data-open="false" />
+//       {/* メニュー本体（SSR)初期はdata-open='fales' */}
+//       <nav
+//         id="primary-nav"
+//         class={navClass}
+//         data-open="false"
+//         aria-label="Primary"
+//       >
+//         {navLinks.map((link) => {
+//           const isActive =
+//             current === link.href || current.startsWith(link.href + '/');
+//           return (
+//             <a
+//               key={link.href}
+//               href={link.href}
+//               class={cx(linkBase, isActive && activeLinkClass)}
+//               aria-current={isActive ? 'page' : undefined}
+//             >
+//               {link.text}
+//             </a>
+//           );
+//         })}
+//       </nav>
+//     </header>
+//   );
+// };
+
+
 import { css, cx } from 'hono/css';
 import type { FC } from 'hono/jsx';
 import { useRequestContext } from 'hono/jsx-renderer';
 import NavToggle from '../islands/NavToggle';
+import { container } from '../styles/tokens';
+import { prose } from '../styles/prose';
 
 const headerClass = css`
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+
+  /* 横幅はcontainerで制御するのでここは余白のみ */
+  padding: 0.5rem 0;
+
+  /* reduce motion 対応 */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+`;
+
+const innerClass = css`
+  /* container を中で並べるflexラッパー */
   display: flex;
-  gap: 1rem;
   align-items: center;
-  padding: 0.5rem 1rem;
   justify-content: space-between;
-  background: #fff;
+  gap: 1rem;
 `;
 
+/* ブランド（サイト名） */
 const titleClass = css`
-  font-size: 1.5rem;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
   margin: 0;
+  letter-spacing: var(--letter-spacing-wide);
 `;
 
+/* ブランド用リンク（Hoverで銅色だけに反応、背景はつけない） */
+const brandLink = css`
+  color: var(--color-text);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.3s ease, border-color 0.3s ease;
+
+  &:hover {
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-color: transparent;
+  }
+`;
+
+/* ナビ本体（モバイルドロワー + PC常時表示） */
 const navClass = css`
-  /* モバイルは右から出る引き出し（初期は非表示） */
+  /* 初期は非表示（モバイル） */
   display: none;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 1rem;
 
-  /* 🟢 モバイル幅で右からスライドイン（<=767px） */
+  /* 🟢 モバイル幅（<=767px）：右からスライドイン */
   @media (max-width: 767px) {
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     width: min(80vw, 320px);
-    background: #fff;
+    background: var(--color-bg);
     box-shadow: -12px 0 24px rgba(0, 0, 0, 0.15);
     z-index: 40;
     transform: translateX(100%);
     transition: transform 160ms ease;
   }
 
-  /* 🖥 PCは従来どおり横並び常時表示（>=768px） */
+  /* 🖥 PC（>=768px）：横並びで常時表示 */
   @media (min-width: 768px) {
     display: flex;
     flex-direction: row;
     padding: 0;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
     position: static;
     transform: none;
     box-shadow: none;
@@ -61,6 +270,7 @@ const navClass = css`
   }
 `;
 
+/* 背景の半透明幕（モバイル時） */
 const backdropClass = css`
   display: none;
 
@@ -76,24 +286,31 @@ const backdropClass = css`
   }
 `;
 
+/* 共通リンクスタイル（ナビ用） */
 const linkBase = css`
-  display: inline-block; /* padding有効化 */
+  display: inline-block;
   text-decoration: none;
-  padding: 0.5rem 0.8rem;
-  color: #262626;
+  padding: 0.6rem 0.9rem;
+  color: var(--color-accent);
   border-radius: 6px;
-  transition: background-color 120ms ease;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+
   &:hover {
-    background-color: #efefef;
+    color: var(--color-secondary);
+    background-color: rgba(182, 122, 79, 0.08); /* Proof Copperの淡トーン */
   }
+
   &:focus-visible {
-    outline: 2px solid #646cff;
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 `;
 
+/* Activeリンク（現在地） */
 const activeLinkClass = css`
-  background-color: #e9e9e9;
+  background-color: rgba(63, 112, 77, 0.10); /* Traveler Greenの薄トーン */
+  color: var(--color-accent);
+  font-weight: 600;
 `;
 
 export type NavLink = { href: string; text: string };
@@ -112,36 +329,42 @@ export const Header: FC<{ links?: readonly NavLink[] }> = ({
 
   return (
     <header class={headerClass}>
-      <h1 class={titleClass}>
-        <a href="/" class={linkBase}>
-          tokec&apos;s web site
-        </a>
-      </h1>
-      {/* ★ モバイル用トグル（Island） */}
-      <NavToggle target="primary-nav" backdropId="nav-backdrop" />
-      <div id="nav-backdrop" class={backdropClass} data-open="false" />
-      {/* メニュー本体（SSR)初期はdata-open='fales' */}
-      <nav
-        id="primary-nav"
-        class={navClass}
-        data-open="false"
-        aria-label="Primary"
-      >
-        {navLinks.map((link) => {
-          const isActive =
-            current === link.href || current.startsWith(link.href + '/');
-          return (
-            <a
-              key={link.href}
-              href={link.href}
-              class={cx(linkBase, isActive && activeLinkClass)}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {link.text}
-            </a>
-          );
-        })}
-      </nav>
+      <div class={cx(container, innerClass)}>
+        <h1 class={titleClass}>
+          <a href="/" class={brandLink}>
+            tokec&apos;s web site
+          </a>
+        </h1>
+
+        {/* ★ モバイル用トグル（Island） */}
+        <NavToggle target="primary-nav" backdropId="nav-backdrop" />
+
+        {/* 背景幕 */}
+        <div id="nav-backdrop" class={backdropClass} data-open="false" />
+
+        {/* メニュー本体（SSR）初期は data-open='false' */}
+        <nav
+          id="primary-nav"
+          class={navClass}
+          data-open="false"
+          aria-label="Primary"
+        >
+          {navLinks.map((link) => {
+            const isActive =
+              current === link.href || current.startsWith(link.href + '/');
+            return (
+              <a
+                key={link.href}
+                href={link.href}
+                class={cx(linkBase, isActive && activeLinkClass)}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {link.text}
+              </a>
+            );
+          })}
+        </nav>
+      </div>
     </header>
   );
 };

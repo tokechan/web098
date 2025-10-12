@@ -7,6 +7,7 @@ import mdx from '@mdx-js/rollup';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import rehypePrettyCode from 'rehype-pretty-code';
+import tailwindcss from '@tailwindcss/vite';
 
 const entry = './app/server.ts';
 
@@ -14,7 +15,11 @@ export default defineConfig({
   plugins: [
     honox({
       devServer: { adapter },
-      client: { input: ['/app/client.ts', '/app/style.css'] },
+      client: { input: [
+        '/app/client.ts', 
+        '/app/style.css',
+        '/app/styles/global.css'
+      ] },
     }),
     mdx({
       jsxImportSource: 'hono/jsx',
@@ -35,5 +40,6 @@ export default defineConfig({
     }),
     ssg({ entry }),
     build(),
+    tailwindcss(),
   ],
 });
