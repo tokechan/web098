@@ -33,6 +33,9 @@ const timeStyle = css`
 export default createRoute((c) =>
   c.render(
     <div class={wrapperStyle}>
+      {/* <div class={timeStyle}>
+        <Time />
+      </div> */}
       <FooterBadge
         headingPrimary="Trying Anyway"
         headingSecondary="Tiny Experiments"
@@ -40,17 +43,14 @@ export default createRoute((c) =>
         editionLabel="Develop Edition"
         footerText="Crafted For Curious Minds"
         metaSections={[
-          { label: 'Powered By', value: 'Honox + Cloudflare', variant: 'script' },
+          { label: 'Powered By', value: 'Cloudflare', variant: 'script' },
           { label: 'Maker', value: 'tokec', variant: 'signature' },
           { label: 'Vol', value: '53.5% Ideas', variant: 'script' },
         ]}
         ariaLabel="Trying Anyway — Tiny Experiments — Messy but Curious"
         scale="hero"
       />
-      <p class={taglineStyle}>思想を実装で確かめる / blog + Web services playground</p>
-      <div class={timeStyle}>
-        <Time />
-      </div>
+
     </div>
   )
 );

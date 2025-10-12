@@ -258,47 +258,47 @@ const badgeHeroScaleStyle = css`
   }
 
   & .badge__meta {
-    gap: clamp(1.5rem, 4vw, 3rem);
+    gap: clamp(1.25rem, 4vw, 2.75rem);
   }
 
   & .badge__metaItem {
-    padding: 0 clamp(1rem, 3vw, 1.75rem);
+    padding: 0 clamp(0.75rem, 2.5vw, 1.5rem);
   }
 
   & .badge__label {
-    font-size: clamp(0.7rem, 1.4vw, 0.95rem);
+    font-size: clamp(0.55rem, 1.2vw, 0.9rem);
   }
 
   & .badge__value {
-    font-size: clamp(1.4rem, 3vw, 2.4rem);
-    letter-spacing: clamp(0.12em, 0.18em, 0.2em);
+    font-size: clamp(1rem, 2.4vw, 2.2rem);
+    letter-spacing: clamp(0.08em, 0.15em, 0.2em);
   }
 
   & .badge__value--script {
-    font-size: clamp(1.4rem, 3.2vw, 2.5rem);
+    font-size: clamp(1rem, 2.5vw, 2.3rem);
   }
 
   & .badge__signature {
-    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-size: clamp(1rem, 2.4vw, 2.1rem);
   }
 
   & .badge__value--links {
-    gap: clamp(1rem, 2vw, 1.5rem);
+    gap: clamp(0.75rem, 2vw, 1.5rem);
   }
 
   & .badge__linkIcon {
-    width: clamp(20px, 3vw, 28px);
-    height: clamp(20px, 3vw, 28px);
+    width: clamp(18px, 2.5vw, 26px);
+    height: clamp(18px, 2.5vw, 26px);
   }
 
   & .badge__linkText {
-    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    font-size: clamp(0.72rem, 1.3vw, 0.95rem);
   }
 
   & .badge__footer {
-    margin-top: clamp(1.2rem, 3vw, 2rem);
-    font-size: clamp(0.85rem, 1.5vw, 1.2rem);
-    letter-spacing: clamp(0.24em, 0.3em, 0.36em);
+    margin-top: clamp(1.25rem, 3vw, 2rem);
+    font-size: clamp(0.75rem, 1.3vw, 1.1rem);
+    letter-spacing: clamp(0.22em, 0.28em, 0.34em);
   }
 `;
 

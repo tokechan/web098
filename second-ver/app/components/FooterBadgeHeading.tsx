@@ -55,21 +55,25 @@ const headingStyle = css`
 `;
 
 const headingHeroStyle = css`
-  gap: 1rem;
-  padding-bottom: 2.25rem;
+  gap: clamp(1rem, 4vw, 1.75rem);
+  padding-bottom: clamp(2.5rem, 7vw, 3.75rem);
 
   & .heading__primary {
-    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-size: clamp(2.6rem, 9vw, 4.5rem);
   }
 
   & .heading__secondary {
-    font-size: clamp(1.4rem, 2.6vw, 2rem);
-    letter-spacing: 0.36em;
+    font-size: clamp(1.15rem, 4vw, 2rem);
+    letter-spacing: 0.34em;
   }
 
   & .heading__accent {
-    font-size: clamp(1.8rem, 3vw, 2.6rem);
-    letter-spacing: 0.42em;
+    font-size: clamp(1.5rem, 5vw, 2.6rem);
+    letter-spacing: 0.4em;
+  }
+
+  & .heading__rule {
+    margin-top: clamp(1.25rem, 5vw, 2rem);
   }
 
   & .heading__rule::before,
@@ -78,8 +82,9 @@ const headingHeroStyle = css`
   }
 
   & .heading__edition {
-    font-size: clamp(1rem, 1.8vw, 1.3rem);
-    letter-spacing: 0.32em;
+    margin-top: clamp(0.4rem, 2.5vw, 1rem);
+    font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+    letter-spacing: 0.3em;
   }
 `;
 
