@@ -146,23 +146,40 @@ const baseStyle = css`
 
   & .badge__value--links {
     display: inline-flex;
-    gap: 0.75rem;
+    gap: 1rem;
     align-items: center;
     justify-content: center;
     text-transform: none;
     letter-spacing: 0.05em;
     font-size: 1rem;
+    flex-wrap: wrap;
   }
 
   & .badge__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--color-accent);
     font-weight: 600;
     text-decoration: none;
     letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   & .badge__link:hover {
     color: var(--color-secondary);
+  }
+
+  & .badge__linkIcon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+
+  & .badge__linkText {
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
   }
 
   & .badge__footer {
