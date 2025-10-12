@@ -69,7 +69,7 @@ const appear = keyframes`
 
 const card = css`
   list-style: none;
-  border: 3px solid rgb(255, 98, 0);
+  border: 3px solid var(--color-accent);
   border-radius: var(--radius-md);
   padding: var(--space-4);
   animation: ${appear} 160ms ease-out both;
@@ -82,6 +82,11 @@ const card = css`
     outline: 2px solid var(--color-link);
     outline-offset: 2px;
   }
+
+  &:hover {
+    border-color: var(--color-accent-hover);
+  }
+
 `;
 
 const articleTitle = css`
