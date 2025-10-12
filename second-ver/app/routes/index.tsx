@@ -1,20 +1,56 @@
 import { createRoute } from 'honox/factory';
 import { css } from 'hono/css';
+import { FooterBadge } from '../components/FooterBadge';
 import Time from '../islands/time';
 
-const className = css`
-  font-family: sans-serif;
+const wrapperStyle = css`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(3rem, 6vw, 5rem);
+  padding: clamp(4rem, 12vw, 8rem) 0 clamp(6rem, 14vw, 10rem);
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding-left: clamp(1.5rem, 4vw, 3rem);
+  padding-right: clamp(1.5rem, 4vw, 3rem);
 `;
 
-export default createRoute(
-  (
-    c // const name = c.req.query('name') ?? 'tokec'
-  ) =>
-    c.render(
-      <div class="py-8 text-center">
-        <h1 class="text-3xl font-bold">Hello! honox</h1>
-        <p>✏️blog+小さなWebサービスの実験場🧪</p>
+const taglineStyle = css`
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+`;
+
+const timeStyle = css`
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  letter-spacing: 0.08em;
+  text-align: center;
+`;
+
+export default createRoute((c) =>
+  c.render(
+    <div class={wrapperStyle}>
+      <FooterBadge
+        headingPrimary="Trying Anyway"
+        headingSecondary="Tiny Experiments"
+        headingAccent="Messy but Curious"
+        editionLabel="Develop Edition"
+        footerText="Crafted For Curious Minds"
+        metaSections={[
+          { label: 'Powered By', value: 'Honox + Cloudflare', variant: 'script' },
+          { label: 'Maker', value: 'tokec', variant: 'signature' },
+          { label: 'Vol', value: '53.5% Ideas', variant: 'script' },
+        ]}
+        ariaLabel="Trying Anyway — Tiny Experiments — Messy but Curious"
+        scale="hero"
+      />
+      <p class={taglineStyle}>思想を実装で確かめる / blog + Web services playground</p>
+      <div class={timeStyle}>
         <Time />
       </div>
-    )
+    </div>
+  )
 );

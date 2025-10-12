@@ -15,11 +15,11 @@ const XIcon = () => (
 );
 
 const footerWrapperStyle = css`
-  padding: 4rem 1rem;
+  padding: clamp(4rem, 8vw, 6rem) 0 clamp(3rem, 6vw, 5rem);
   background: transparent;
+  width: 100%;
   display: flex;
   justify-content: center;
-  width: 100%;
 `;
 
 const siteName = 'toke travelers';
@@ -46,7 +46,7 @@ export const Footer: FC = () => {
                   aria-label="GitHub"
                 >
                   <GitHubIcon />
-                  <span class="badge__linkText"></span>
+                  <span class="badge__linkText">GitHub</span>
                 </a>
                 <a
                   class="badge__link"
@@ -56,7 +56,7 @@ export const Footer: FC = () => {
                   aria-label="X"
                 >
                   <XIcon />
-                  <span class="badge__linkText"></span>
+                  <span class="badge__linkText">X</span>
                 </a>
               </>
             ),

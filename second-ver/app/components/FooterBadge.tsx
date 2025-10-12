@@ -1,5 +1,6 @@
 import { css, cx } from 'hono/css';
 import type { JSX } from 'hono/jsx';
+import { FooterBadgeHeading } from './FooterBadgeHeading';
 
 type BadgeSectionVariant = 'value' | 'script' | 'signature' | 'links';
 
@@ -13,71 +14,25 @@ type FooterBadgeVariant = 'badge' | 'strip';
 
 type FooterBadgeProps = {
   showHeading?: boolean;
-  title?: string;
-  limitedLabel?: string;
+  headingPrimary?: string;
+  headingSecondary?: string;
+  headingAccent?: string;
   editionLabel?: string;
   footerText?: string;
   metaSections?: BadgeMetaSection[];
   ariaLabel?: string;
   variant?: FooterBadgeVariant;
+  scale?: 'default' | 'hero';
 };
 
 const baseStyle = css`
   position: relative;
   margin: 0 auto;
+  width: 100%;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--color-text);
-
-  & .badge__title {
-    font-family: var(--font-serif);
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-  }
-
-  & .badge__limited {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.3em;
-    color: var(--color-secondary);
-  }
-
-  & .badge__dot {
-    font-size: 0.65rem;
-    letter-spacing: 0;
-  }
-
-  & .badge__flourish {
-    display: inline-flex;
-    width: 82px;
-    height: 18px;
-    background: currentColor;
-    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="164" height="36" viewBox="0 0 164 36" fill="none"><path d="M3.5 35C29 1.5 135.5 1 160.5 35" stroke="black" stroke-width="6" stroke-linecap="round"/></svg>') center / contain no-repeat;
-    opacity: 0.65;
-  }
-
-  & .badge__flourish--right {
-    transform: scaleX(-1);
-  }
-
-  & .badge__divider {
-    margin: 1.25rem auto 1.1rem;
-    height: 1px;
-    width: 100%;
-    background: linear-gradient(
-      to right,
-      transparent 0%,
-      var(--color-accent) 35%,
-      var(--color-accent) 65%,
-      transparent 100%
-    );
-  }
 
   & .badge__meta {
     display: grid;
@@ -191,8 +146,8 @@ const baseStyle = css`
 `;
 
 const badgeVariantStyle = css`
-  padding: 1.75rem 1.5rem 1.5rem;
   max-width: 420px;
+  padding: 1.75rem 1.5rem 1.5rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 243, 239, 0.96));
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
@@ -225,10 +180,9 @@ const badgeCompactStyle = css`
 `;
 
 const stripVariantStyle = css`
-  padding: 2rem 0 1.5rem;
+  padding: 0;
   margin: 0;
   width: 100%;
-  max-width: 880px;
   background: none;
   border: none;
   box-shadow: none;
@@ -238,7 +192,7 @@ const stripVariantStyle = css`
   }
 
   & .badge__divider {
-    width: 100%;
+    width: min(100%, 1280px);
     margin: 0 0 1.75rem;
     height: 2px;
     background: var(--color-accent);
@@ -294,15 +248,71 @@ const defaultMetaSections: BadgeMetaSection[] = [
   { label: 'Vol', value: '53.5%', variant: 'script' },
 ];
 
+const badgeHeroScaleStyle = css`
+  width: 100%;
+  max-width: none;
+  padding: clamp(2.5rem, 6vw, 3.5rem) clamp(2rem, 8vw, 4rem) clamp(2.25rem, 5vw, 3rem);
+
+  &::before {
+    inset: clamp(0.9rem, 2vw, 1.25rem);
+  }
+
+  & .badge__meta {
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+
+  & .badge__metaItem {
+    padding: 0 clamp(1rem, 3vw, 1.75rem);
+  }
+
+  & .badge__label {
+    font-size: clamp(0.7rem, 1.4vw, 0.95rem);
+  }
+
+  & .badge__value {
+    font-size: clamp(1.4rem, 3vw, 2.4rem);
+    letter-spacing: clamp(0.12em, 0.18em, 0.2em);
+  }
+
+  & .badge__value--script {
+    font-size: clamp(1.4rem, 3.2vw, 2.5rem);
+  }
+
+  & .badge__signature {
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+  }
+
+  & .badge__value--links {
+    gap: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  & .badge__linkIcon {
+    width: clamp(20px, 3vw, 28px);
+    height: clamp(20px, 3vw, 28px);
+  }
+
+  & .badge__linkText {
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+  }
+
+  & .badge__footer {
+    margin-top: clamp(1.2rem, 3vw, 2rem);
+    font-size: clamp(0.85rem, 1.5vw, 1.2rem);
+    letter-spacing: clamp(0.24em, 0.3em, 0.36em);
+  }
+`;
+
 export const FooterBadge = ({
   showHeading = true,
-  title = 'Straight Tennessee Rye Whiskey',
-  limitedLabel = 'Limited',
-  editionLabel = 'Edition',
+  headingPrimary = 'Straight Tennessee Rye Whiskey',
+  headingSecondary = 'Tennessee Travelers',
+  headingAccent = 'Bold & Spicy',
+  editionLabel = 'Limited Edition',
   footerText = '500ml',
   metaSections = defaultMetaSections,
   ariaLabel = 'Limited edition whiskey label graphic',
   variant = 'badge',
+  scale = 'default',
 }: FooterBadgeProps) => {
   const renderValue = (section: BadgeMetaSection) => {
     switch (section.variant) {
@@ -329,21 +339,20 @@ export const FooterBadge = ({
       class={cx(
         baseStyle,
         variant === 'badge' ? badgeVariantStyle : stripVariantStyle,
+        scale === 'hero' && variant === 'badge' && badgeHeroScaleStyle,
         !showHeading && variant === 'badge' && badgeCompactStyle
       )}
       aria-label={ariaLabel}
     >
       {showHeading && (
-        <>
-          <div class="badge__title">{title}</div>
-          <div class="badge__limited">
-            <span class="badge__flourish" aria-hidden="true"></span>
-            <span>{limitedLabel}</span>
-            <span class="badge__dot">•</span>
-            <span>{editionLabel}</span>
-            <span class="badge__flourish badge__flourish--right" aria-hidden="true"></span>
-          </div>
-        </>
+        <FooterBadgeHeading
+          primary={headingPrimary}
+          secondary={headingSecondary}
+          accent={headingAccent}
+          editionLabel={editionLabel}
+          ariaLabel={`${headingPrimary} ${headingSecondary} ${headingAccent}`}
+          scale={scale}
+        />
       )}
       <div class="badge__divider" aria-hidden="true"></div>
       <div class="badge__meta">{metaItems}</div>

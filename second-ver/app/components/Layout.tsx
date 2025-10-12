@@ -13,14 +13,8 @@ const mainClass = css`
   flex: 1;
   width: 100%;
   display: flex;
-  justify-content: center;
-`;
-
-const containerClass = css`
-  width: 100%;
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 1rem;
+  flex-direction: column;
+  align-items: center;
 `;
 
 export const Layout: FC = ({ children }) => {
@@ -28,7 +22,7 @@ export const Layout: FC = ({ children }) => {
     <div class={pageClass}>
       <Header />
       <main class={mainClass}>
-        <div class={containerClass}>{children}</div>
+        {children}
       </main>
       <Footer />
     </div>
