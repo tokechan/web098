@@ -154,6 +154,7 @@
 // app/routes/demos/index.tsx
 import { createRoute } from 'honox/factory';
 import { css } from 'hono/css';
+import { FooterBadge } from '../../components/FooterBadge';
 
 const pageStyle = css`
   background: var(--color-bg);
@@ -242,6 +243,10 @@ const footerStyle = css`
   color: var(--color-muted);
   font-size: 0.9rem;
   border-top: 1px solid var(--color-accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.8rem;
 
   & a {
     color: var(--color-accent);
@@ -250,6 +255,17 @@ const footerStyle = css`
 
   & a:hover {
     color: var(--color-secondary);
+  }
+
+  & .footer__meta {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+
+  & .footer__links {
+    margin: 0;
+    letter-spacing: 0.06em;
   }
 `;
 
@@ -297,8 +313,11 @@ export default createRoute((c) =>
       </main>
 
       <footer class={footerStyle}>
-        <p>© 2025 toke travelers — Built on Honox & Thought.</p>
-        <p><a href="#">Buy me a coffee</a> ☕ | <a href="#">Contact</a></p>
+        <FooterBadge />
+        <p class="footer__meta">© 2025 toke travelers — Built on Honox & Thought.</p>
+        <p class="footer__links">
+          <a href="#">Buy me a coffee</a> ☕ | <a href="#">Contact</a>
+        </p>
       </footer>
     </div>
   )
