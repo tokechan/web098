@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Sometype+Mono:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap');
 @import './theme.css';
 
@@ -32,11 +33,12 @@ h1, h2, h3, h4, h5 {
   margin: 0 0 var(--space-3) 0;
 }
 
-/* == Layout basics == */
+body {
+  min-height: 100vh;
+}
+
 main {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: var(--space-6);
+  width: 100%;
 }
 
 
