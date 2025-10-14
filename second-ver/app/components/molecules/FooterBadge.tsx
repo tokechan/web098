@@ -1,6 +1,6 @@
 import { css, cx } from 'hono/css';
 import type { JSX } from 'hono/jsx';
-import { FooterBadgeHeading } from './FooterBadgeHeading';
+import { FooterBadgeHeading } from '../atoms/FooterBadgeHeading';
 
 type BadgeSectionVariant = 'value' | 'script' | 'signature' | 'links';
 

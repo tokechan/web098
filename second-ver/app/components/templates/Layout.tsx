@@ -1,7 +1,7 @@
-import { css, cx } from 'hono/css';
+import { css } from 'hono/css';
 import type { FC } from 'hono/jsx';
-import { Header } from './Header';
-import { Footer } from './Footer';
+import { Header } from '../organisms/Header';
+import { Footer } from '../organisms/Footer';
 
 const pageClass = css`
   min-height: 100vh;

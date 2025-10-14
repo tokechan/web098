@@ -1,6 +1,6 @@
 import { css } from 'hono/css';
 import type { FC } from 'hono/jsx';
-import { FooterBadge } from './FooterBadge';
+import { FooterBadge } from '../molecules/FooterBadge';
 
 const GitHubIcon = () => (
   <svg class="badge__linkIcon" viewBox="0 0 24 24" aria-hidden="true">

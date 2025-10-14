@@ -1,6 +1,6 @@
 import { createRoute } from 'honox/factory';
 import { css } from 'hono/css';
-import { FooterBadge } from '../components/FooterBadge';
+import { FooterBadge } from '../components/molecules/FooterBadge';
 import Time from '../islands/time';
 
 const wrapperStyle = css`

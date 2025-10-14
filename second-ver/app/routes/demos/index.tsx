@@ -154,7 +154,7 @@
 // app/routes/demos/index.tsx
 import { createRoute } from 'honox/factory';
 import { css } from 'hono/css';
-import { FooterBadge } from '../../components/FooterBadge';
+import { FooterBadge } from '../../components/molecules/FooterBadge';
 
 const pageStyle = css`
   background: var(--color-bg);

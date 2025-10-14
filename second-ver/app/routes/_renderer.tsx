@@ -1,7 +1,7 @@
 import { jsxRenderer } from 'hono/jsx-renderer';
 import { Link, Script } from 'honox/server';
 import { Style } from 'hono/css';
-import { Layout } from '../components/Layout';
+import { Layout } from '../components/templates/Layout';
 
 
 
