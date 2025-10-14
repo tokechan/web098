@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'hono/jsx';
 
 export default function Time() {

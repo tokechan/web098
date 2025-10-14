@@ -1,3 +1,5 @@
+'use client';
+
 import { css } from 'hono/css';
 import { useEffect, useState } from 'hono/jsx';
 

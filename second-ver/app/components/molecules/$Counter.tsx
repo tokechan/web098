@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'hono/jsx';
 
 export default function Counter() {
