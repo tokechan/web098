@@ -11,9 +11,9 @@ const btn = css`
   padding: 0.5rem 0.75rem;
   border: 1px solid #ddd;
   border-radius: 6px;
-  background: #fff;
+  background: var(--color-bg);
   &:hover {
-    background-color: rgb(35, 253, 104);
+    background-color: var(--color-bg);
   }
   /* PCでは隠す */
   @media (min-width: 768px) {
@@ -36,7 +36,10 @@ const srOnly = css`
 const icon = css`
   font-size: 1.125rem;
   line-height: 1;
-  color: rgb(22, 194, 19);
+  color:var(--color-accent);
+  &:hover {
+    color: var(--color-secondary);
+  }
 `;
 
 const isBrowser = () =>

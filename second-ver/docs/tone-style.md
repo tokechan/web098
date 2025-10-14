@@ -68,6 +68,7 @@ Jack Daniel’s “Bold & Spicy” の誠実さ × toke思想の静けさを融�
   --color-accent: #3F704D;      /* Traveler Green - 探究と信頼のシンボル */
   --color-accent-hover: #4B8E5A;/* Hover時にわずかに明るく */
   --color-secondary: #B67A4F;   /* Proof Copper - 温かみとクラフト感 */
+  --color-secondary-hover: rgba(182, 122, 79 0.08);
 
   /* === Structure === */
   --color-border: #D8D8D3;      /* 優しい明るめの境界線 */
