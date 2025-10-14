@@ -1,7 +1,11 @@
 import { css } from 'hono/css';
 import type { FC } from 'hono/jsx';
+import type { PostSummary } from '../../lib/posts';
 import { FooterBadge } from '../molecules/FooterBadge';
 import Time from '../atoms/$Time';
+import { LatestPosts } from '../organisms/LatestPosts';
+import { LabsShowcase } from '../organisms/LabsShowcase';
+import type { ProjectSummary } from '../../lib/projects';
 
 const wrapperStyle = css`
   display: flex;
@@ -27,9 +31,15 @@ type HomePageProps = {
    * Toggle the real-time clock display above the hero badge.
    */
   showClock?: boolean;
+  latestPosts: PostSummary[];
+  projects: ProjectSummary[];
 };
 
-export const HomePage: FC<HomePageProps> = ({ showClock = false }) => (
+export const HomePage: FC<HomePageProps> = ({
+  showClock = false,
+  latestPosts,
+  projects,
+}) => (
   <div class={wrapperStyle}>
     {showClock && (
       <div class={timeStyle}>
@@ -50,5 +60,7 @@ export const HomePage: FC<HomePageProps> = ({ showClock = false }) => (
       ariaLabel="Trying Anyway — Tiny Experiments — Messy but Curious"
       scale="hero"
     />
+    <LatestPosts posts={latestPosts} />
+    <LabsShowcase projects={projects} />
   </div>
 );
