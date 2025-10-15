@@ -36,7 +36,7 @@ const srOnly = css`
 const icon = css`
   font-size: 1.125rem;
   line-height: 1;
-  color:var(--color-accent);
+  color: var(--color-accent);
   &:hover {
     color: var(--color-secondary);
   }

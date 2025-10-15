@@ -1,6 +1,6 @@
 import { css, cx } from 'hono/css';
 import type { JSX } from 'hono/jsx';
-import { FooterBadgeHeading } from './FooterBadgeHeading';
+import { FooterBadgeHeading } from '../atoms/FooterBadgeHeading';
 
 type BadgeSectionVariant = 'value' | 'script' | 'signature' | 'links';
 
@@ -53,16 +53,6 @@ const baseStyle = css`
     letter-spacing: 0.08em;
     position: relative;
     padding: 0 0.75rem;
-  }
-
-  & .badge__metaItem:not(:first-child)::before {
-    content: '';
-    position: absolute;
-    left: -0.75rem;
-    top: -0.5rem;
-    bottom: -0.5rem;
-    width: 1px;
-    background: linear-gradient(180deg, transparent, var(--color-border), transparent);
   }
 
   & .badge__label {
@@ -161,7 +151,7 @@ const badgeVariantStyle = css`
     content: '';
     position: absolute;
     inset: 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 3px solid var(--color-accent);
     border-radius: 0.35rem;
     pointer-events: none;
   }
@@ -191,29 +181,24 @@ const stripVariantStyle = css`
     display: none;
   }
 
-  & .badge__divider {
-    width: min(100%, 1280px);
-    margin: 0 0 1.75rem;
-    height: 2px;
-    background: var(--color-accent);
-  }
 
   & .badge__meta {
     width: 100%;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 6fr) minmax(0, 2fr);
-    gap: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(1rem, 4vw, 2.5rem);
     letter-spacing: 0.05em;
+    padding: 0 clamp(20px, 5vw, 60px);
   }
 
   & .badge__metaItem {
-    align-items: center;
-    padding: 0 1rem;
-  }
-
-  & .badge__metaItem:not(:first-child)::before {
-    left: 0;
-    top: -0.75rem;
-    bottom: -0.75rem;
+    align-items: flex-start;
+    text-align: left;
+    padding: 0;
+    min-width: 180px;
+    flex: 1 1 200px;
   }
 
   & .badge__label {

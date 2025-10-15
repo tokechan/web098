@@ -1,18 +1,6 @@
 import { createRoute } from 'honox/factory';
 import { css, keyframes } from 'hono/css';
-import type { FC } from 'hono/jsx';
-import { toSlug } from '../../lib/slug';
-import { postUrl } from '../../lib/paths';
-
-type PostMod = {
-  frontmatter?: { 
-    title?: string; 
-    date?: string; 
-    tags?: string[];
-    description?: string;
-  };
-  default: FC;
-};
+import { getAllPosts } from '../../lib/posts';
 
 //Design tokens ====
 const vars = css`
@@ -126,36 +114,23 @@ const desc = css`
 
 
 
-const modules = import.meta.glob<PostMod>('../../content/blog/**/*.mdx', {
-  eager: true,
-});
-
-const posts = Object.entries(modules)
-  .map(([path, mod]) => ({
-    slug: toSlug(path),
-    title: mod.frontmatter?.title ?? '(no title)',
-    date: mod.frontmatter?.date ?? '',
-    description: mod.frontmatter?.description ?? '',
-  }))
-  .sort((a, b) => +new Date(b.date) - +new Date(a.date));
-
 export default createRoute((c) =>
   c.render(
     <main class={mainClass}>
       <h1 class={pageTitle}>Blog</h1>
       <ul role="list" class={grid}>
-        {posts.map((p) => (
-          <li class={card} key={p.slug}>
+        {getAllPosts().map((post) => (
+          <li class={card} key={post.slug}>
             <article>
               <h2 class={articleTitle}>
-                <a href={postUrl(p.slug)}>
-                  {p.title}
+                <a href={post.url}>
+                  {post.title}
                 </a>
               </h2>
-              <time datetime={p.date} class={metaTime}>
-                {p.date}
+              <time datetime={post.date} class={metaTime}>
+                {post.date}
               </time>
-              {p.description && <p class={desc}>{p.description}</p>}
+              {post.description && <p class={desc}>{post.description}</p>}
             </article>
           </li>
         ))}

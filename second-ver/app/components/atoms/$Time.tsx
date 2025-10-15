@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'hono/jsx';
+'use client';
+
+import { useEffect, useState } from 'hono/jsx';
 
 export default function Time() {
   const [time, setTime] = useState(new Date().toLocaleString());
@@ -12,7 +14,7 @@ export default function Time() {
   }, []);
 
   return (
-    <div className="time">
+    <div class="time">
       <p>現在時刻: {time}</p>
     </div>
   );
