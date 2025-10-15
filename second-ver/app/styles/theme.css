@@ -20,6 +20,7 @@
     /* === Structure === */
     --color-border: #E1E0D7;
     --color-bg-card: #FFFFFF;
+    --container-max: 1024px;
   
     /* === Typography === */
     /* --font-sans: 'Inter', 'Noto Sans JP', sans-serif; */

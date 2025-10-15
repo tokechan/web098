@@ -1,6 +1,7 @@
-import { css } from 'hono/css';
+import { css, cx } from 'hono/css';
 import type { FC } from 'hono/jsx';
 import { FooterBadge } from '../molecules/FooterBadge';
+import { container } from '../../styles/tokens';
 
 const GitHubIcon = () => (
   <svg class="badge__linkIcon" viewBox="0 0 24 24" aria-hidden="true">
@@ -15,12 +16,15 @@ const XIcon = () => (
 );
 
 const footerWrapperStyle = css`
-  padding: clamp(4rem, 8vw, 6rem) 0 clamp(3rem, 6vw, 5rem);
   background: transparent;
   width: 100%;
+  border-top: 3px solid var(--color-accent);
+`;
+
+const footerInnerStyle = css`
   display: flex;
   justify-content: center;
-  border-top: 3px solid var(--color-accent);
+  padding-block: clamp(3rem, 8vw, 6rem);
 `;
 
 const siteName = 'toke travelers';
@@ -28,44 +32,46 @@ const siteName = 'toke travelers';
 export const Footer: FC = () => {
   return (
     <footer class={footerWrapperStyle}>
-      <FooterBadge
-        showHeading={false}
-        variant="strip"
-        ariaLabel="Site footer"
-        metaSections={[
-          { label: 'Powered By', value: 'Cloudflare', variant: 'script' },
-          { label: 'Copyright', value: `© ${new Date().getFullYear()} ${siteName}`, variant: 'signature' },
-          {
-            label: 'Social',
-            value: (
-              <>
-                <a
-                  class="badge__link"
-                  href="https://github.com/"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label="GitHub"
-                >
-                  <GitHubIcon />
-                  <span class="badge__linkText">GitHub</span>
-                </a>
-                <a
-                  class="badge__link"
-                  href="https://x.com/"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label="X"
-                >
-                  <XIcon />
-                  <span class="badge__linkText">X</span>
-                </a>
-              </>
-            ),
-            variant: 'links',
-          },
-        ]}
-        footerText={siteName.toUpperCase()}
-      />
+      <div class={cx(container, footerInnerStyle)}>
+        <FooterBadge
+          showHeading={false}
+          variant="strip"
+          ariaLabel="Site footer"
+          metaSections={[
+            { label: 'Powered By', value: 'Cloudflare', variant: 'script' },
+            { label: 'Copyright', value: `© ${new Date().getFullYear()} ${siteName}`, variant: 'signature' },
+            {
+              label: 'Social',
+              value: (
+                <>
+                  <a
+                    class="badge__link"
+                    href="https://github.com/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label="GitHub"
+                  >
+                    <GitHubIcon />
+                    <span class="badge__linkText">GitHub</span>
+                  </a>
+                  <a
+                    class="badge__link"
+                    href="https://x.com/"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label="X"
+                  >
+                    <XIcon />
+                    <span class="badge__linkText">X</span>
+                  </a>
+                </>
+              ),
+              variant: 'links',
+            },
+          ]}
+          footerText={siteName.toUpperCase()}
+        />
+      </div>
     </footer>
   );
 };
