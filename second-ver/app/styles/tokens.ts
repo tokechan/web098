@@ -31,7 +31,7 @@ import { css } from 'hono/css'
 export const container = css`
   width: min(100%, var(--container-max));
   margin-inline: auto;
-  padding-inline: var(--space-4);
+  padding-inline: clamp(1.25rem, 5vw, 3.5rem);
 `
 
 export const card = css`

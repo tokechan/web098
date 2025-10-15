@@ -1,4 +1,4 @@
-import { css } from 'hono/css';
+import { css, cx } from 'hono/css';
 import type { FC } from 'hono/jsx';
 import type { PostSummary } from '../../lib/posts';
 import { FooterBadge } from '../molecules/FooterBadge';
@@ -6,17 +6,14 @@ import Time from '../atoms/$Time';
 import { LatestPosts } from '../organisms/LatestPosts';
 import { LabsShowcase } from '../organisms/LabsShowcase';
 import type { ProjectSummary } from '../../lib/projects';
+import { container } from '../../styles/tokens';
 
 const wrapperStyle = css`
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: clamp(3rem, 6vw, 5rem);
-  padding: clamp(4rem, 12vw, 8rem) 0 clamp(6rem, 14vw, 10rem);
-  width: min(100%, 1280px);
-  margin: 0 auto;
-  padding-left: clamp(1.5rem, 4vw, 3rem);
-  padding-right: clamp(1.5rem, 4vw, 3rem);
+  padding-block: clamp(4rem, 12vw, 8rem) clamp(6rem, 14vw, 10rem);
 `;
 
 const timeStyle = css`
@@ -40,7 +37,7 @@ export const HomePage: FC<HomePageProps> = ({
   latestPosts,
   projects,
 }) => (
-  <div class={wrapperStyle}>
+  <div class={cx(container, wrapperStyle)}>
     {showClock && (
       <div class={timeStyle}>
         <Time />

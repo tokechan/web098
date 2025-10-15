@@ -6,12 +6,12 @@ import { container } from '../../styles/tokens';
 import { prose } from '../../styles/prose';
 
 const headerClass = css`
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 3px solid var(--color-accent);
   background: var(--color-bg);
   color: var(--color-text);
 
   /* 横幅はcontainerで制御するのでここは余白のみ */
-  padding: 0.5rem 0;
+  padding: clamp(0.75rem, 2.5vw, 1.41rem) 0;
 
   /* reduce motion 対応 */
   @media (prefers-reduced-motion: reduce) {
@@ -27,7 +27,7 @@ const innerClass = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
 `;
 
 /* ブランド（サイト名） */

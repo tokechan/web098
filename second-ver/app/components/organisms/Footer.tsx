@@ -20,6 +20,7 @@ const footerWrapperStyle = css`
   width: 100%;
   display: flex;
   justify-content: center;
+  border-top: 3px solid var(--color-accent);
 `;
 
 const siteName = 'toke travelers';
