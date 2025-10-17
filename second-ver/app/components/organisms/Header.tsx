@@ -163,7 +163,7 @@ export const Header: FC<{ links?: readonly NavLink[] }> = ({
       <div class={cx(container, innerClass)}>
         <h1 class={titleClass}>
           <a href="/" class={brandLink}>
-            tokec&apos;s web site
+            tokeC Room
           </a>
         </h1>
 
