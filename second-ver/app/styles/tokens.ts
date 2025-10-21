@@ -4,7 +4,6 @@ export const container = css`
   width: min(100%, var(--container-max));
   margin-inline: auto;
   padding-inline: clamp(1.25rem, 5vw, 3.5rem);
-  clamp(1.25rem, 5vw, 3.5rem);
 `
 
 export const card = css`
