@@ -78,24 +78,36 @@ const Page: FC<Props> = ({ data }) => {
       <form class={formClass} method="post">
         <label class={labelClass}>
           Title
-          <input 
-            name="title" 
-            class={inputClass} 
-            type="text" 
-            vlue={data?.title.value}  
+          <input
+            name="title"
+            class={inputClass}
+            type="text"
+            value={data?.title.value ?? ''}
+            aria-invalid={data?.title.error ? 'true' : 'false'}
           />
         </label>
-        {data?.title.error && data.title.error.map((error) => <p class={errorClass}>{error}</p>)}
+        {data?.title.error &&
+          data.title.error.map((error) => (
+            <p class={errorClass} key={error}>
+              {error}
+            </p>
+          ))}
 
         <label class={labelClass}>
           Content
-          <textarea 
-            name="content" 
-            class={textareaClass} 
-            value={data?.content.value}  
+          <textarea
+            name="content"
+            class={textareaClass}
+            value={data?.content.value ?? ''}
+            aria-invalid={data?.content.error ? 'true' : 'false'}
           />
         </label>
-        {data?.content.error && data.content.error.map((error) => <p class={errorClass}>{error}</p>)}
+        {data?.content.error &&
+          data.content.error.map((error) => (
+            <p class={errorClass} key={error}>
+              {error}
+            </p>
+          ))}
         
         <button class={buttonClass} type="submit">
           Create
@@ -141,4 +153,3 @@ export const POST = createRoute(
         return c.redirect("/blogs", 303);
       }
 );
-
