@@ -1,0 +1,8 @@
+{
+  "agentPath": ["./AGENT.md", "~/AGENT.md"],
+  "workspace": "~/Dev",
+  "defaultCommands": [
+    "npm run lint:fix",
+    "npm run type-check"
+  ]
+}
