@@ -1,5 +1,5 @@
 import { createRoute } from 'honox/factory';
-import { css, keyframes } from 'hono/css';
+import { css, cx, keyframes } from 'hono/css';
 import { getAllPosts } from '../../lib/posts';
 
 //Design tokens ====
@@ -116,7 +116,7 @@ const desc = css`
 
 export default createRoute((c) =>
   c.render(
-    <main class={mainClass}>
+    <main class={cx(vars, mainClass)}>
       <h1 class={pageTitle}>Blog</h1>
       <ul role="list" class={grid}>
         {getAllPosts().map((post) => (

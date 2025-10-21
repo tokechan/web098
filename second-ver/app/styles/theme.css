@@ -20,8 +20,7 @@
     /* === Structure === */
     --color-border: #E1E0D7;
     --color-bg-card: #FFFFFF;
-    --container-max: 1024px;
-  
+
     /* === Typography === */
     /* --font-sans: 'Inter', 'Noto Sans JP', sans-serif; */
     /* --font-serif: 'Playfair Display', serif; */
@@ -38,6 +37,7 @@
     --space-5: 1.25rem;
     --space-6: 1.5rem;
     --radius-md: .375rem;
+    --radius-lg: .75rem;
     --container-max: 1150px;
   }
   
