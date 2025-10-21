@@ -3,7 +3,6 @@ import type { FC } from 'hono/jsx';
 import { useRequestContext } from 'hono/jsx-renderer';
 import NavToggle from '../atoms/$NavToggle';
 import { container } from '../../styles/tokens';
-import { prose } from '../../styles/prose';
 
 const headerClass = css`
   border-bottom: 3px solid var(--color-accent);
