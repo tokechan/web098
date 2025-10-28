@@ -11,7 +11,7 @@ import {
 import type { Message } from '@/lib/supabase'
 
 export default function Home() {
-  const [userId] = useState(() => `user_${Math.random().toString(36).slice(2, 11)}`)
+  const [userId, setUserId] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [pushEnabled, setPushEnabled] = useState(false)
@@ -19,6 +19,8 @@ export default function Home() {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
 
   useEffect(() => {
+    // クライアントサイドでのみランダムなユーザーIDを生成（Hydration Error回避）
+    setUserId(`user_${Math.random().toString(36).slice(2, 11)}`)
     // PWAモード（A2HS済み）かチェック
     const isPWA = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as any).standalone === true
@@ -114,7 +116,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">PWA Push Demo</h1>
-        <p className="text-sm text-gray-600 mb-6">User ID: {userId}</p>
+        <p className="text-sm text-gray-600 mb-6">User ID: {userId || '読み込み中...'}</p>
 
         {/* PWA & Push 設定 */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -159,10 +161,10 @@ export default function Home() {
           <div className="flex gap-2">
             <button
               onClick={handleEnablePush}
-              disabled={notificationPermission === 'granted'}
+              disabled={pushEnabled}
               className="flex-1 bg-blue-600 text-white px-4 py-2 rounded font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
             >
-              {notificationPermission === 'granted' ? '通知許可済み' : 'Push通知を有効化'}
+              {pushEnabled ? 'Push購読済み' : 'Push通知を有効化'}
             </button>
             <button
               onClick={handleTestNotification}

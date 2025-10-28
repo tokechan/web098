@@ -9,7 +9,7 @@ workers_dev = true
 # CORS設定用
 [vars]
 # 本番環境では適切なオリジンに変更
-ALLOWED_ORIGINS = "http://localhost:3000,https://your-frontend.vercel.app"
+ALLOWED_ORIGINS = "http://localhost:3001,https://your-frontend.vercel.app"
 
 # 環境変数は .dev.vars に記載（このファイルは .gitignore に追加）
 # SUPABASE_URL
