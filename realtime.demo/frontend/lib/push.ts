@@ -64,9 +64,10 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
     
     if (!subscription) {
       // 新規購読
+      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: applicationServerKey as BufferSource,
       })
     }
 

@@ -31,7 +31,7 @@ app.use('/*', async (c, next) => {
   }
   
   if (c.req.method === 'OPTIONS') {
-    return c.text('', 204)
+    return c.body(null, 204)
   }
   
   await next()
@@ -120,6 +120,7 @@ app.post('/api/push/send', async (c) => {
     // Push送信
     const pushSubscription: PushSubscription = {
       endpoint: subscription.endpoint,
+      expirationTime: null,
       keys: {
         p256dh: subscription.p256dh,
         auth: subscription.auth,
@@ -203,6 +204,7 @@ app.post('/api/thanks', async (c) => {
       try {
         const pushSubscription: PushSubscription = {
           endpoint: subscription.endpoint,
+          expirationTime: null,
           keys: {
             p256dh: subscription.p256dh,
             auth: subscription.auth,
