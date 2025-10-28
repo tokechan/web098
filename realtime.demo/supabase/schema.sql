@@ -56,6 +56,30 @@ CREATE POLICY "Allow all for messages" ON messages
 CREATE POLICY "Allow all for push_subscriptions" ON push_subscriptions
   FOR ALL USING (true) WITH CHECK (true);
 
+-- FCM トークンテーブル（Firebase Cloud Messaging用）
+CREATE TABLE IF NOT EXISTS fcm_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT UNIQUE NOT NULL,
+  fcm_token TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- インデックス
+CREATE INDEX IF NOT EXISTS fcm_tokens_user_id_idx ON fcm_tokens(user_id);
+
+-- 更新日時の自動更新
+CREATE TRIGGER update_fcm_tokens_updated_at
+BEFORE UPDATE ON fcm_tokens
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- RLS設定
+ALTER TABLE fcm_tokens ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all for fcm_tokens" ON fcm_tokens
+  FOR ALL USING (true) WITH CHECK (true);
+
 -- Realtime有効化の確認
 -- Supabase Dashboard > Database > Replication で messages テーブルを有効にしてください
 
