@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
-import { SignJWT } from 'jose'
 
 type Bindings = {
   SUPABASE_URL: string
@@ -50,10 +49,40 @@ function getSupabaseClient(env: Bindings) {
 // ===================================
 
 /**
+ * Base64 URL エンコード
+ */
+function base64UrlEncode(data: ArrayBuffer): string {
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(data)))
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/**
  * Firebase Service Account から OAuth2 アクセストークンを取得
  */
 async function getAccessToken(env: Bindings): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
+
+  // JWT Header
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT',
+  }
+
+  // JWT Payload
+  const payload = {
+    iss: env.FCM_CLIENT_EMAIL,
+    sub: env.FCM_CLIENT_EMAIL,
+    aud: 'https://oauth2.googleapis.com/token',
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    iat: now,
+    exp: now + 3600,
+  }
+
+  // エンコード
+  const encoder = new TextEncoder()
+  const headerEncoded = base64UrlEncode(encoder.encode(JSON.stringify(header)))
+  const payloadEncoded = base64UrlEncode(encoder.encode(JSON.stringify(payload)))
+  const message = `${headerEncoded}.${payloadEncoded}`
 
   // PEM形式の秘密鍵をバイナリに変換
   const pemHeader = '-----BEGIN PRIVATE KEY-----'
@@ -76,17 +105,11 @@ async function getAccessToken(env: Bindings): Promise<string> {
     ['sign']
   )
 
+  // 署名
+  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, encoder.encode(message))
+
   // JWT作成
-  const jwt = await new SignJWT({
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
-    aud: 'https://oauth2.googleapis.com/token',
-  })
-    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
-    .setIssuer(env.FCM_CLIENT_EMAIL)
-    .setSubject(env.FCM_CLIENT_EMAIL)
-    .setIssuedAt(now)
-    .setExpirationTime(now + 3600)
-    .sign(cryptoKey)
+  const jwt = `${message}.${base64UrlEncode(signature)}`
 
   // アクセストークンを取得
   const response = await fetch('https://oauth2.googleapis.com/token', {
