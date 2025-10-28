@@ -1,6 +1,6 @@
 import type { FC } from 'hono/jsx';
-import { postUrl } from './paths';
 import { toSlug } from './slug';
+import { postUrl } from './paths';
 
 type PostModule = {
   frontmatter?: {
