@@ -8,8 +8,8 @@ workers_dev = true
 
 # CORS設定用
 [vars]
-# 本番環境では適切なオリジンに変更
-ALLOWED_ORIGINS = "http://localhost:3001,https://your-frontend.vercel.app"
+# 本番のフロントエンドURLを設定
+ALLOWED_ORIGINS = "http://localhost:3001,https://pwa-push-demo-frontend.fleatoke.workers.dev"
 
 # 環境変数は .dev.vars に記載（このファイルは .gitignore に追加）
 # SUPABASE_URL

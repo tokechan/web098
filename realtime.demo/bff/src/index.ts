@@ -1,6 +1,12 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
+import { 
+  buildPushPayload,
+  type PushSubscription,
+  type PushMessage,
+  type VapidKeys
+} from '@block65/webcrypto-web-push'
 
 type Bindings = {
   SUPABASE_URL: string
@@ -25,121 +31,11 @@ app.use('/*', async (c, next) => {
   }
   
   if (c.req.method === 'OPTIONS') {
-    return c.text('', 204)
+    return c.body(null, 204)
   }
   
   await next()
 })
-
-// ===== VAPID ユーティリティ関数 =====
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData = atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i)
-  }
-  return outputArray
-}
-
-function arrayBufferToBase64Url(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-async function generateVapidAuthHeader(
-  endpoint: string,
-  vapidPublicKey: string,
-  vapidPrivateKey: string,
-  subject: string
-): Promise<string> {
-  const url = new URL(endpoint)
-  const audience = `${url.protocol}//${url.host}`
-  
-  const now = Math.floor(Date.now() / 1000)
-  const exp = now + 12 * 60 * 60 // 12 hours
-  
-  const header = {
-    typ: 'JWT',
-    alg: 'ES256'
-  }
-  
-  const payload = {
-    aud: audience,
-    exp: exp,
-    sub: subject
-  }
-  
-  const headerBase64 = arrayBufferToBase64Url(
-    new TextEncoder().encode(JSON.stringify(header))
-  )
-  const payloadBase64 = arrayBufferToBase64Url(
-    new TextEncoder().encode(JSON.stringify(payload))
-  )
-  
-  const unsignedToken = `${headerBase64}.${payloadBase64}`
-  
-  // VAPID秘密鍵をインポート
-  const privateKeyBuffer = urlBase64ToUint8Array(vapidPrivateKey)
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    privateKeyBuffer,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign']
-  )
-  
-  // 署名
-  const signature = await crypto.subtle.sign(
-    { name: 'ECDSA', hash: 'SHA-256' },
-    cryptoKey,
-    new TextEncoder().encode(unsignedToken)
-  )
-  
-  const signatureBase64 = arrayBufferToBase64Url(signature)
-  const jwt = `${unsignedToken}.${signatureBase64}`
-  
-  return `vapid t=${jwt}, k=${vapidPublicKey}`
-}
-
-async function sendWebPush(
-  endpoint: string,
-  p256dh: string,
-  auth: string,
-  payload: string,
-  vapidPublicKey: string,
-  vapidPrivateKey: string,
-  subject: string
-): Promise<Response> {
-  const authHeader = await generateVapidAuthHeader(
-    endpoint,
-    vapidPublicKey,
-    vapidPrivateKey,
-    subject
-  )
-  
-  // エンコード処理（簡易版 - 本番では適切な暗号化が必要）
-  const payloadBuffer = new TextEncoder().encode(payload)
-  
-  return fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/octet-stream',
-      'Content-Encoding': 'aes128gcm',
-      'Authorization': authHeader,
-      'TTL': '86400'
-    },
-    body: payloadBuffer
-  })
-}
-
-// ===== API エンドポイント =====
 
 // ヘルスチェック
 app.get('/', (c) => {
@@ -222,24 +118,41 @@ app.post('/api/push/send', async (c) => {
     }
 
     // Push送信
-    const payload = JSON.stringify({
-      title,
-      body: messageBody,
-      url: url || '/',
-    })
+    const pushSubscription: PushSubscription = {
+      endpoint: subscription.endpoint,
+      expirationTime: null,
+      keys: {
+        p256dh: subscription.p256dh,
+        auth: subscription.auth,
+      },
+    }
 
-    const response = await sendWebPush(
-      subscription.endpoint,
-      subscription.p256dh,
-      subscription.auth,
-      payload,
-      c.env.VAPID_PUBLIC_KEY,
-      c.env.VAPID_PRIVATE_KEY,
-      c.env.VAPID_MAILTO
-    )
+    const vapid: VapidKeys = {
+      subject: c.env.VAPID_MAILTO,
+      publicKey: c.env.VAPID_PUBLIC_KEY,
+      privateKey: c.env.VAPID_PRIVATE_KEY,
+    }
+
+    const message: PushMessage = {
+      data: JSON.stringify({
+        title,
+        body: messageBody,
+        url: url || '/',
+      }),
+      options: {
+        ttl: 86400,
+      },
+    }
+
+    // ペイロード構築（暗号化 + VAPID署名を自動でやってくれる）
+    const payload = await buildPushPayload(message, pushSubscription, vapid)
+
+    // Push Serviceに送信
+    const response = await fetch(subscription.endpoint, payload)
 
     if (!response.ok) {
-      console.error('Web Push failed:', await response.text())
+      const errorText = await response.text()
+      console.error('Web Push failed:', response.status, errorText)
       return c.json({ error: 'Failed to send notification' }, 500)
     }
 
@@ -288,22 +201,35 @@ app.post('/api/thanks', async (c) => {
       .single()
 
     if (subscription) {
-      const payload = JSON.stringify({
-        title: '💝 ありがとうが届きました！',
-        body: message,
-        url: '/',
-      })
-
       try {
-        await sendWebPush(
-          subscription.endpoint,
-          subscription.p256dh,
-          subscription.auth,
-          payload,
-          c.env.VAPID_PUBLIC_KEY,
-          c.env.VAPID_PRIVATE_KEY,
-          c.env.VAPID_MAILTO
-        )
+        const pushSubscription: PushSubscription = {
+          endpoint: subscription.endpoint,
+          expirationTime: null,
+          keys: {
+            p256dh: subscription.p256dh,
+            auth: subscription.auth,
+          },
+        }
+
+        const vapid: VapidKeys = {
+          subject: c.env.VAPID_MAILTO,
+          publicKey: c.env.VAPID_PUBLIC_KEY,
+          privateKey: c.env.VAPID_PRIVATE_KEY,
+        }
+
+        const pushMessage: PushMessage = {
+          data: JSON.stringify({
+            title: '💝 ありがとうが届きました！',
+            body: message,
+            url: '/',
+          }),
+          options: {
+            ttl: 86400,
+          },
+        }
+
+        const payload = await buildPushPayload(pushMessage, pushSubscription, vapid)
+        await fetch(subscription.endpoint, payload)
       } catch (pushError) {
         console.error('Push notification error:', pushError)
         // Push失敗してもメッセージは保存済みなのでエラーにしない
