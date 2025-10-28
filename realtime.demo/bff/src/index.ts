@@ -1,7 +1,12 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
-import { sendNotification } from '@block65/webcrypto-web-push'
+import { 
+  buildPushPayload,
+  type PushSubscription,
+  type PushMessage,
+  type VapidKeys
+} from '@block65/webcrypto-web-push'
 
 type Bindings = {
   SUPABASE_URL: string
@@ -113,29 +118,36 @@ app.post('/api/push/send', async (c) => {
     }
 
     // Push送信
-    const payload = JSON.stringify({
-      title,
-      body: messageBody,
-      url: url || '/',
-    })
-
-    const response = await sendNotification(
-      {
-        endpoint: subscription.endpoint,
-        keys: {
-          p256dh: subscription.p256dh,
-          auth: subscription.auth,
-        },
+    const pushSubscription: PushSubscription = {
+      endpoint: subscription.endpoint,
+      keys: {
+        p256dh: subscription.p256dh,
+        auth: subscription.auth,
       },
-      payload,
-      {
-        vapidDetails: {
-          subject: c.env.VAPID_MAILTO,
-          publicKey: c.env.VAPID_PUBLIC_KEY,
-          privateKey: c.env.VAPID_PRIVATE_KEY,
-        },
-      }
-    )
+    }
+
+    const vapid: VapidKeys = {
+      subject: c.env.VAPID_MAILTO,
+      publicKey: c.env.VAPID_PUBLIC_KEY,
+      privateKey: c.env.VAPID_PRIVATE_KEY,
+    }
+
+    const message: PushMessage = {
+      data: JSON.stringify({
+        title,
+        body: messageBody,
+        url: url || '/',
+      }),
+      options: {
+        ttl: 86400,
+      },
+    }
+
+    // ペイロード構築（暗号化 + VAPID署名を自動でやってくれる）
+    const payload = await buildPushPayload(message, pushSubscription, vapid)
+
+    // Push Serviceに送信
+    const response = await fetch(subscription.endpoint, payload)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -188,30 +200,34 @@ app.post('/api/thanks', async (c) => {
       .single()
 
     if (subscription) {
-      const payload = JSON.stringify({
-        title: '💝 ありがとうが届きました！',
-        body: message,
-        url: '/',
-      })
-
       try {
-        await sendNotification(
-          {
-            endpoint: subscription.endpoint,
-            keys: {
-              p256dh: subscription.p256dh,
-              auth: subscription.auth,
-            },
+        const pushSubscription: PushSubscription = {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: subscription.p256dh,
+            auth: subscription.auth,
           },
-          payload,
-          {
-            vapidDetails: {
-              subject: c.env.VAPID_MAILTO,
-              publicKey: c.env.VAPID_PUBLIC_KEY,
-              privateKey: c.env.VAPID_PRIVATE_KEY,
-            },
-          }
-        )
+        }
+
+        const vapid: VapidKeys = {
+          subject: c.env.VAPID_MAILTO,
+          publicKey: c.env.VAPID_PUBLIC_KEY,
+          privateKey: c.env.VAPID_PRIVATE_KEY,
+        }
+
+        const pushMessage: PushMessage = {
+          data: JSON.stringify({
+            title: '💝 ありがとうが届きました！',
+            body: message,
+            url: '/',
+          }),
+          options: {
+            ttl: 86400,
+          },
+        }
+
+        const payload = await buildPushPayload(pushMessage, pushSubscription, vapid)
+        await fetch(subscription.endpoint, payload)
       } catch (pushError) {
         console.error('Push notification error:', pushError)
         // Push失敗してもメッセージは保存済みなのでエラーにしない
