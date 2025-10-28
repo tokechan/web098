@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
-import { SignJWT, importPKCS8 } from 'jose'
+import { SignJWT } from 'jose'
 
 type Bindings = {
   SUPABASE_URL: string
@@ -55,9 +55,28 @@ function getSupabaseClient(env: Bindings) {
 async function getAccessToken(env: Bindings): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
 
-  // JWT作成
-  const privateKey = await importPKCS8(env.FCM_PRIVATE_KEY, 'RS256')
+  // PEM形式の秘密鍵をバイナリに変換
+  const pemHeader = '-----BEGIN PRIVATE KEY-----'
+  const pemFooter = '-----END PRIVATE KEY-----'
+  const pemContents = env.FCM_PRIVATE_KEY.replace(pemHeader, '')
+    .replace(pemFooter, '')
+    .replace(/\s/g, '')
 
+  const binaryDer = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0))
+
+  // CryptoKeyをインポート
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    binaryDer,
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      hash: 'SHA-256',
+    },
+    false,
+    ['sign']
+  )
+
+  // JWT作成
   const jwt = await new SignJWT({
     scope: 'https://www.googleapis.com/auth/firebase.messaging',
     aud: 'https://oauth2.googleapis.com/token',
@@ -67,7 +86,7 @@ async function getAccessToken(env: Bindings): Promise<string> {
     .setSubject(env.FCM_CLIENT_EMAIL)
     .setIssuedAt(now)
     .setExpirationTime(now + 3600)
-    .sign(privateKey)
+    .sign(cryptoKey)
 
   // アクセストークンを取得
   const response = await fetch('https://oauth2.googleapis.com/token', {

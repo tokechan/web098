@@ -7,7 +7,7 @@ import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/mess
 
 // Firebase設定
 const firebaseConfig = {
-  apiKey: 'AIzaSyDJGvjxRunvADvo5o2VHQg--Q-U_kZbUao',
+  apiKey: 'AIzaSyDJGvjxRunvADv05o2VHQg--Q-U_kZbUao',
   authDomain: 'pwa-push-demo-5a61e.firebaseapp.com',
   projectId: 'pwa-push-demo-5a61e',
   storageBucket: 'pwa-push-demo-5a61e.firebasestorage.app',

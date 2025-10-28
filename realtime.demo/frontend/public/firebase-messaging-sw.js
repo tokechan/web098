@@ -6,7 +6,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-comp
 
 // Firebase 設定
 const firebaseConfig = {
-  apiKey: 'AIzaSyDJGvjxRunvADvo5o2VHQg--Q-U_kZbUao',
+  apiKey: 'AIzaSyDJGvjxRunvADv05o2VHQg--Q-U_kZbUao',
   authDomain: 'pwa-push-demo-5a61e.firebaseapp.com',
   projectId: 'pwa-push-demo-5a61e',
   storageBucket: 'pwa-push-demo-5a61e.firebasestorage.app',

@@ -19,7 +19,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/sw.js')
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
     console.log('[FCM] Service Worker registered:', registration)
     return registration
   } catch (error) {
