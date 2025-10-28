@@ -6,7 +6,8 @@ import {
   registerServiceWorker, 
   requestNotificationPermission,
   subscribeToPush,
-  sendTestNotification 
+  sendTestNotification,
+  setupMessageListener
 } from '@/lib/push'
 import type { Message } from '@/lib/supabase'
 
@@ -33,6 +34,9 @@ export default function Home() {
 
     // Service Worker 登録
     registerServiceWorker()
+
+    // FCM メッセージリスナーをセットアップ（初回のみ）
+    setupMessageListener()
 
     // メッセージを取得
     loadMessages()
@@ -88,18 +92,30 @@ export default function Home() {
   }
 
   const handleEnablePush = async () => {
-    const permission = await requestNotificationPermission()
-    setNotificationPermission(permission)
-
-    if (permission === 'granted') {
-      const success = await subscribeToPush(userId)
-      setPushEnabled(success)
+    try {
+      console.log('[UI] Starting push enable process...')
       
-      if (success) {
-        alert('✅ Push通知が有効になりました！')
+      const permission = await requestNotificationPermission()
+      console.log('[UI] Permission result:', permission)
+      setNotificationPermission(permission)
+
+      if (permission === 'granted') {
+        console.log('[UI] Calling subscribeToPush...')
+        const success = await subscribeToPush(userId)
+        console.log('[UI] Subscribe result:', success)
+        setPushEnabled(success)
+        
+        if (success) {
+          alert('✅ Push通知が有効になりました！')
+        } else {
+          alert('❌ Push通知の有効化に失敗しました')
+        }
       } else {
-        alert('❌ Push通知の有効化に失敗しました')
+        alert('⚠️ 通知許可が必要です')
       }
+    } catch (error) {
+      console.error('[UI] Enable push error:', error)
+      alert('❌ エラーが発生しました: ' + error)
     }
   }
 

@@ -142,25 +142,24 @@ async function sendFCMNotification(
 ): Promise<void> {
   const accessToken = await getAccessToken(env)
 
+  // data-only メッセージ（フォアグラウンド・バックグラウンド両方で動作）
   const message = {
     message: {
       token: fcmToken,
-      notification: {
+      // notification フィールドを削除（data-only message）
+      data: {
         title,
         body,
-      },
-      data: {
         url: url || '/',
-      },
-      webpush: {
-        fcm_options: {
-          link: url || '/',
-        },
+        type: 'notification',
       },
     },
   }
 
   const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`
+
+  console.log('[FCM] Sending to endpoint:', fcmEndpoint)
+  console.log('[FCM] Message payload:', JSON.stringify(message, null, 2))
 
   const response = await fetch(fcmEndpoint, {
     method: 'POST',
@@ -171,12 +170,16 @@ async function sendFCMNotification(
     body: JSON.stringify(message),
   })
 
+  console.log('[FCM] Response status:', response.status)
+
   if (!response.ok) {
     const error = await response.text()
     console.error('[FCM] Send failed:', response.status, error)
     throw new Error(`FCM send failed: ${error}`)
   }
 
+  const responseData = await response.json()
+  console.log('[FCM] Response data:', responseData)
   console.log('[FCM] Notification sent successfully')
 }
 

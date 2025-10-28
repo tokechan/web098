@@ -1,5 +1,7 @@
 // Service Worker for FCM (Firebase Cloud Messaging)
 
+console.log('[SW] Service Worker script loaded')
+
 // Firebase Messaging Service Worker をインポート
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js')
@@ -16,17 +18,26 @@ const firebaseConfig = {
 
 // Firebase 初期化
 firebase.initializeApp(firebaseConfig)
+console.log('[SW] Firebase initialized')
 
 // Messaging インスタンス取得
 const messaging = firebase.messaging()
+console.log('[SW] Messaging instance created')
 
 // バックグラウンドメッセージ受信時
 messaging.onBackgroundMessage((payload) => {
   console.log('[SW] Background message received:', payload)
+  console.log('[SW] Payload data:', payload.data)
+  console.log('[SW] Payload notification:', payload.notification)
 
-  const notificationTitle = payload.notification?.title || 'New Message'
+  // data メッセージから通知情報を取得
+  const notificationTitle = payload.data?.title || payload.notification?.title || 'New Message'
+  const notificationBody = payload.data?.body || payload.notification?.body || ''
+  
+  console.log('[SW] Extracted - Title:', notificationTitle, 'Body:', notificationBody)
+  
   const notificationOptions = {
-    body: payload.notification?.body || '',
+    body: notificationBody,
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [200, 100, 200],
@@ -37,6 +48,50 @@ messaging.onBackgroundMessage((payload) => {
   }
 
   return self.registration.showNotification(notificationTitle, notificationOptions)
+})
+
+// Push イベントを直接リスン（デバッグ用 + フォールバック）
+self.addEventListener('push', (event) => {
+  console.log('[SW] ===== PUSH EVENT RECEIVED =====')
+  console.log('[SW] Event:', event)
+  
+  if (event.data) {
+    console.log('[SW] Has data!')
+    try {
+      const text = event.data.text()
+      console.log('[SW] Raw text:', text)
+      
+      try {
+        const json = JSON.parse(text)
+        console.log('[SW] Parsed JSON:', json)
+        
+        // FCM の data-only メッセージの場合、手動で通知を表示
+        if (json.data) {
+          console.log('[SW] Showing notification from push event')
+          const title = json.data.title || 'New Message'
+          const body = json.data.body || ''
+          const url = json.data.url || '/'
+          
+          event.waitUntil(
+            self.registration.showNotification(title, {
+              body: body,
+              icon: '/icon-192.png',
+              badge: '/icon-192.png',
+              data: { url: url }
+            })
+          )
+        }
+      } catch (e) {
+        console.log('[SW] Not valid JSON:', e)
+      }
+    } catch (e) {
+      console.error('[SW] Error reading data:', e)
+    }
+  } else {
+    console.log('[SW] No data in push event')
+  }
+  
+  console.log('[SW] ===== END PUSH EVENT =====')
 })
 
 // Install & Activate
