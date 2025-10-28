@@ -2,8 +2,8 @@
  * Web Push 関連のユーティリティ
  */
 
-const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'http://localhost:8787'
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || 'https://pwa-push-demo-bff.fleatoke.workers.dev'
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BGiIDYRNL-sa7Dp8UGYuf0ICZ4voSM7xKckuqyGB1N13fQyzeibls2ohvQqWiOumcQ9sV0mPPRtiCSgDLxfe3sg'
 
 /**
  * Base64 を Uint8Array に変換（VAPID公開鍵用）
