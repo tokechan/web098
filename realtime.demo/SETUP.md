@@ -90,8 +90,11 @@ cd frontend
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-# ↑ 新方式の場合は Publishable key を使用（変数名はそのまま）
+
+# 新方式（推奨）: Publishable key を使用
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_xxxxx...
+# または旧方式: anon key を使用
+# NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # BFF
 NEXT_PUBLIC_BFF_URL=http://localhost:8787
@@ -111,8 +114,11 @@ cd ../bff
 ```bash
 # Supabase
 SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-# ↑ 新方式の場合は Secret key を使用（変数名はそのまま）
+
+# 新方式（推奨）: Secret key を使用
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_xxxxx...
+# または旧方式: service_role key を使用
+# SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # VAPID Keys
 VAPID_PUBLIC_KEY=BJxxxxx...
