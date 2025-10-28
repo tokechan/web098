@@ -1,20 +1,16 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
-import { 
-  buildPushPayload,
-  type PushSubscription,
-  type PushMessage,
-  type VapidKeys
-} from '@block65/webcrypto-web-push'
+import { SignJWT, importPKCS8 } from 'jose'
 
 type Bindings = {
   SUPABASE_URL: string
   SUPABASE_SERVICE_ROLE_KEY: string
-  VAPID_PUBLIC_KEY: string
-  VAPID_PRIVATE_KEY: string
-  VAPID_MAILTO: string
   ALLOWED_ORIGINS: string
+  // Firebase Service Account
+  FCM_PROJECT_ID: string
+  FCM_PRIVATE_KEY: string
+  FCM_CLIENT_EMAIL: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -23,147 +19,217 @@ const app = new Hono<{ Bindings: Bindings }>()
 app.use('/*', async (c, next) => {
   const allowedOrigins = c.env.ALLOWED_ORIGINS.split(',')
   const origin = c.req.header('Origin') || ''
-  
+
   if (allowedOrigins.includes(origin)) {
     c.header('Access-Control-Allow-Origin', origin)
     c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     c.header('Access-Control-Allow-Headers', 'Content-Type')
   }
-  
+
   if (c.req.method === 'OPTIONS') {
     return c.body(null, 204)
   }
-  
+
   await next()
 })
 
 // ヘルスチェック
 app.get('/', (c) => {
-  return c.json({ status: 'ok', service: 'PWA Push Demo BFF' })
+  return c.json({ status: 'ok', service: 'PWA Push Demo BFF (FCM)' })
 })
 
-// Push購読を保存
-const SubscriptionSchema = z.object({
-  userId: z.string(),
-  subscription: z.object({
-    endpoint: z.string(),
-    keys: z.object({
-      p256dh: z.string(),
-      auth: z.string(),
+// Supabaseクライアント取得
+function getSupabaseClient(env: Bindings) {
+  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  })
+}
+
+// ===================================
+// FCM 関連のユーティリティ関数
+// ===================================
+
+/**
+ * Firebase Service Account から OAuth2 アクセストークンを取得
+ */
+async function getAccessToken(env: Bindings): Promise<string> {
+  const now = Math.floor(Date.now() / 1000)
+
+  // JWT作成
+  const privateKey = await importPKCS8(env.FCM_PRIVATE_KEY, 'RS256')
+
+  const jwt = await new SignJWT({
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+  })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuer(env.FCM_CLIENT_EMAIL)
+    .setSubject(env.FCM_CLIENT_EMAIL)
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(privateKey)
+
+  // アクセストークンを取得
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
     }),
-  }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Failed to get access token: ${error}`)
+  }
+
+  const data = await response.json<{ access_token: string }>()
+  return data.access_token
+}
+
+/**
+ * FCM 経由でプッシュ通知を送信
+ */
+async function sendFCMNotification(
+  env: Bindings,
+  fcmToken: string,
+  title: string,
+  body: string,
+  url?: string
+): Promise<void> {
+  const accessToken = await getAccessToken(env)
+
+  const message = {
+    message: {
+      token: fcmToken,
+      notification: {
+        title,
+        body,
+      },
+      data: {
+        url: url || '/',
+      },
+      webpush: {
+        fcm_options: {
+          link: url || '/',
+        },
+      },
+    },
+  }
+
+  const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`
+
+  const response = await fetch(fcmEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(message),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    console.error('[FCM] Send failed:', response.status, error)
+    throw new Error(`FCM send failed: ${error}`)
+  }
+
+  console.log('[FCM] Notification sent successfully')
+}
+
+// ===================================
+// FCM API エンドポイント
+// ===================================
+
+/**
+ * FCM トークンを保存
+ */
+const FCMSubscribeSchema = z.object({
+  userId: z.string(),
+  fcmToken: z.string(),
 })
 
-app.post('/api/push/subscribe', async (c) => {
+app.post('/api/fcm/subscribe', async (c) => {
+  const supabase = getSupabaseClient(c.env)
+  const body = await c.req.json()
+
+  const parsed = FCMSubscribeSchema.safeParse(body)
+  if (!parsed.success) {
+    console.error('[FCM] Invalid subscription data:', parsed.error)
+    return c.json({ error: 'Invalid subscription data' }, 400)
+  }
+
+  const { userId, fcmToken } = parsed.data
+
   try {
-    const body = await c.req.json()
-    const { userId, subscription } = SubscriptionSchema.parse(body)
-
-    const supabase = createClient(
-      c.env.SUPABASE_URL,
-      c.env.SUPABASE_SERVICE_ROLE_KEY
-    )
-
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .upsert({
-        user_id: userId,
-        endpoint: subscription.endpoint,
-        p256dh: subscription.keys.p256dh,
-        auth: subscription.keys.auth,
-      }, {
-        onConflict: 'user_id'
-      })
+    // FCM トークンを保存（既存があれば更新）
+    const { data, error } = await supabase
+      .from('fcm_tokens')
+      .upsert({ user_id: userId, fcm_token: fcmToken }, { onConflict: 'user_id' })
+      .select()
 
     if (error) {
-      console.error('Subscription save error:', error)
-      return c.json({ error: 'Failed to save subscription' }, 500)
+      console.error('[FCM] Failed to save token:', error)
+      return c.json({ error: 'Failed to save FCM token' }, 500)
     }
 
-    return c.json({ ok: true })
+    console.log('[FCM] Token saved:', data)
+    return c.json({ message: 'FCM token saved successfully' })
   } catch (error) {
-    console.error('Subscribe endpoint error:', error)
-    return c.json({ error: 'Invalid request' }, 400)
+    console.error('[FCM] Subscribe error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
   }
 })
 
-// テスト通知を送信
-const SendNotificationSchema = z.object({
+/**
+ * テスト通知を送信（FCM経由）
+ */
+const FCMSendSchema = z.object({
   userId: z.string(),
   title: z.string(),
   body: z.string(),
   url: z.string().optional(),
 })
 
-app.post('/api/push/send', async (c) => {
+app.post('/api/fcm/send', async (c) => {
+  const supabase = getSupabaseClient(c.env)
+  const body = await c.req.json()
+
+  const parsed = FCMSendSchema.safeParse(body)
+  if (!parsed.success) {
+    console.error('[FCM] Invalid send data:', parsed.error)
+    return c.json({ error: 'Invalid notification data' }, 400)
+  }
+
+  const { userId, title, body: messageBody, url } = parsed.data
+
   try {
-    const body = await c.req.json()
-    const { userId, title, body: messageBody, url } = SendNotificationSchema.parse(body)
-
-    const supabase = createClient(
-      c.env.SUPABASE_URL,
-      c.env.SUPABASE_SERVICE_ROLE_KEY
-    )
-
-    // ユーザーのPush購読を取得
-    const { data: subscription, error } = await supabase
-      .from('push_subscriptions')
-      .select('*')
+    // FCM トークンを取得
+    const { data: tokenData, error } = await supabase
+      .from('fcm_tokens')
+      .select('fcm_token')
       .eq('user_id', userId)
       .single()
 
-    if (error || !subscription) {
-      console.error('Subscription not found:', error)
-      return c.json({ error: 'Subscription not found' }, 404)
+    if (error || !tokenData) {
+      console.error('[FCM] Token not found:', error)
+      return c.json({ error: 'FCM token not found for user' }, 404)
     }
 
-    // Push送信
-    const pushSubscription: PushSubscription = {
-      endpoint: subscription.endpoint,
-      expirationTime: null,
-      keys: {
-        p256dh: subscription.p256dh,
-        auth: subscription.auth,
-      },
-    }
+    // FCM 経由で通知送信
+    await sendFCMNotification(c.env, tokenData.fcm_token, title, messageBody, url)
 
-    const vapid: VapidKeys = {
-      subject: c.env.VAPID_MAILTO,
-      publicKey: c.env.VAPID_PUBLIC_KEY,
-      privateKey: c.env.VAPID_PRIVATE_KEY,
-    }
-
-    const message: PushMessage = {
-      data: JSON.stringify({
-        title,
-        body: messageBody,
-        url: url || '/',
-      }),
-      options: {
-        ttl: 86400,
-      },
-    }
-
-    // ペイロード構築（暗号化 + VAPID署名を自動でやってくれる）
-    const payload = await buildPushPayload(message, pushSubscription, vapid)
-
-    // Push Serviceに送信
-    const response = await fetch(subscription.endpoint, payload)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Web Push failed:', response.status, errorText)
-      return c.json({ error: 'Failed to send notification' }, 500)
-    }
-
-    return c.json({ ok: true })
+    return c.json({ message: 'Notification sent successfully' })
   } catch (error) {
-    console.error('Send notification error:', error)
+    console.error('[FCM] Send error:', error)
     return c.json({ error: 'Failed to send notification' }, 500)
   }
 })
 
-// 「ありがとう」を送信（実例）
+/**
+ * メッセージ送信（Supabase Realtime + FCM Push）
+ */
 const ThanksSchema = z.object({
   fromUserId: z.string(),
   toUserId: z.string(),
@@ -171,75 +237,52 @@ const ThanksSchema = z.object({
 })
 
 app.post('/api/thanks', async (c) => {
+  const supabase = getSupabaseClient(c.env)
+  const body = await c.req.json()
+
+  const parsed = ThanksSchema.safeParse(body)
+  if (!parsed.success) {
+    console.error('[API] Invalid thanks data:', parsed.error)
+    return c.json({ error: 'Invalid message data' }, 400)
+  }
+
+  const { fromUserId, toUserId, message } = parsed.data
+
   try {
-    const body = await c.req.json()
-    const { fromUserId, toUserId, message } = ThanksSchema.parse(body)
-
-    const supabase = createClient(
-      c.env.SUPABASE_URL,
-      c.env.SUPABASE_SERVICE_ROLE_KEY
-    )
-
-    // DBに保存（Realtime経由でUI更新）
-    const { error: insertError } = await supabase
+    // Supabase にメッセージを保存（Realtime経由で配信）
+    const { data, error } = await supabase
       .from('messages')
-      .insert({
-        user_id: fromUserId,
-        content: `${message} (to: ${toUserId})`,
-      })
+      .insert({ user_id: toUserId, content: message })
+      .select()
 
-    if (insertError) {
-      console.error('Insert message error:', insertError)
+    if (error) {
+      console.error('[API] Failed to save message:', error)
       return c.json({ error: 'Failed to save message' }, 500)
     }
 
-    // 相手にPush通知送信
-    const { data: subscription } = await supabase
-      .from('push_subscriptions')
-      .select('*')
+    console.log('[API] Message saved:', data)
+
+    // FCM トークンを取得して通知を送信
+    const { data: tokenData } = await supabase
+      .from('fcm_tokens')
+      .select('fcm_token')
       .eq('user_id', toUserId)
       .single()
 
-    if (subscription) {
+    if (tokenData) {
       try {
-        const pushSubscription: PushSubscription = {
-          endpoint: subscription.endpoint,
-          expirationTime: null,
-          keys: {
-            p256dh: subscription.p256dh,
-            auth: subscription.auth,
-          },
-        }
-
-        const vapid: VapidKeys = {
-          subject: c.env.VAPID_MAILTO,
-          publicKey: c.env.VAPID_PUBLIC_KEY,
-          privateKey: c.env.VAPID_PRIVATE_KEY,
-        }
-
-        const pushMessage: PushMessage = {
-          data: JSON.stringify({
-            title: '💝 ありがとうが届きました！',
-            body: message,
-            url: '/',
-          }),
-          options: {
-            ttl: 86400,
-          },
-        }
-
-        const payload = await buildPushPayload(pushMessage, pushSubscription, vapid)
-        await fetch(subscription.endpoint, payload)
-      } catch (pushError) {
-        console.error('Push notification error:', pushError)
+        await sendFCMNotification(c.env, tokenData.fcm_token, '💝 ありがとうが届きました！', message, '/')
+        console.log('[FCM] Push notification sent to user:', toUserId)
+      } catch (fcmError) {
+        console.error('[FCM] Failed to send push notification:', fcmError)
         // Push失敗してもメッセージは保存済みなのでエラーにしない
       }
     }
 
     return c.json({ ok: true })
   } catch (error) {
-    console.error('Thanks endpoint error:', error)
-    return c.json({ error: 'Invalid request' }, 400)
+    console.error('[API] Thanks error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
   }
 })
 

@@ -1,10 +1,11 @@
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-or-secret-key
-# ↑ 新方式: Secret key / 旧方式: service_role key（どちらでも動作）
+SUPABASE_SERVICE_ROLE_KEY=your-secret-key
 
-# VAPID Keys (npx web-push generate-vapid-keys で生成)
-VAPID_PUBLIC_KEY=your-vapid-public-key
-VAPID_PRIVATE_KEY=your-vapid-private-key
-VAPID_MAILTO=mailto:your-email@example.com
-
+# Firebase Service Account (FCM用)
+# Firebase Console > Project Settings > Service Accounts > Generate New Private Key
+FCM_PROJECT_ID=your-project-id
+FCM_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+FCM_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+YOUR_PRIVATE_KEY_HERE
+-----END PRIVATE KEY-----"
