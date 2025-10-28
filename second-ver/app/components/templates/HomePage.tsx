@@ -48,9 +48,9 @@ export const HomePage: FC<HomePageProps> = ({
       editionLabel="Develop Edition"
       footerText="Crafted For Curious Minds"
       metaSections={[
-        { label: 'Powered By', value: 'Cloudflare', variant: 'script' },
-        { label: 'Maker', value: 'tokec', variant: 'signature' },
-        { label: 'Vol', value: '53.5% Ideas', variant: 'script' },
+        { label: 'IDEA SOURCE', value: 'HISTORICAL CONTEXT', variant: 'script' },
+        { label: 'CRAFTED BY', value: 'tokec', variant: 'signature' },
+        { label: 'STATE', value: 'IN PROGRESS', variant: 'script' },
       ]}
       ariaLabel="Trying Anyway — Tiny Experiments — Messy but Curious"
       scale="hero"
