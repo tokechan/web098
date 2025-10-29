@@ -19,8 +19,25 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    // 既存のService Workerを確認
+    const existingRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+    
+    if (existingRegistration) {
+      console.log('[FCM] Service Worker already registered:', existingRegistration)
+      await existingRegistration.update() // 強制的に更新
+      return existingRegistration
+    }
+
+    // 新規登録
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: '/'
+    })
     console.log('[FCM] Service Worker registered:', registration)
+    
+    // 登録完了を待つ
+    await navigator.serviceWorker.ready
+    console.log('[FCM] Service Worker ready!')
+    
     return registration
   } catch (error) {
     console.error('[FCM] Service Worker registration failed:', error)
@@ -43,14 +60,30 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 }
 
 /**
+ * フォアグラウンドメッセージリスナーをセットアップ（初回のみ）
+ */
+export async function setupMessageListener() {
+  console.log('[FCM] Setting up message listener...')
+  await onForegroundMessage((payload) => {
+    console.log('[FCM] Message received in app:', payload)
+    // 必要に応じて追加の処理をここに書く（UIの更新など）
+  })
+}
+
+/**
  * FCM トークンを取得してBFFに保存
  */
 export async function subscribeToPush(userId: string): Promise<boolean> {
   try {
+    console.log('[FCM] Starting subscription process for user:', userId)
+    
     // Service Worker が登録されるまで待機
+    console.log('[FCM] Waiting for service worker...')
     await navigator.serviceWorker.ready
+    console.log('[FCM] Service worker ready!')
 
     // FCM トークンを取得
+    console.log('[FCM] Requesting FCM token with VAPID key...')
     const fcmToken = await getFCMToken(FCM_VAPID_KEY)
 
     if (!fcmToken) {
@@ -61,6 +94,7 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
     console.log('[FCM] Token obtained:', fcmToken)
 
     // BFFに保存
+    console.log('[FCM] Saving token to BFF:', BFF_URL)
     const response = await fetch(`${BFF_URL}/api/fcm/subscribe`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -77,20 +111,7 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
     }
 
     console.log('[FCM] Token saved to BFF')
-
-    // フォアグラウンドメッセージをリスン
-    onForegroundMessage((payload) => {
-      console.log('[FCM] Foreground message:', payload)
-
-      // 通知を表示
-      if (payload.notification) {
-        new Notification(payload.notification.title || 'New Message', {
-          body: payload.notification.body || '',
-          icon: '/icon-192.png',
-        })
-      }
-    })
-
+    console.log('[FCM] Subscription completed successfully!')
     return true
   } catch (error) {
     console.error('[FCM] Subscription failed:', error)
@@ -133,6 +154,8 @@ export async function sendTestNotification(userId: string): Promise<boolean> {
  */
 export async function sendMessage(fromUserId: string, toUserId: string, message: string): Promise<boolean> {
   try {
+    console.log('[FCM] Sending message via BFF:', { fromUserId, toUserId, message })
+
     const response = await fetch(`${BFF_URL}/api/thanks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -145,7 +168,7 @@ export async function sendMessage(fromUserId: string, toUserId: string, message:
       return false
     }
 
-    console.log('[FCM] Message sent!')
+    console.log('[FCM] Message sent successfully')
     return true
   } catch (error) {
     console.error('[FCM] Error sending message:', error)

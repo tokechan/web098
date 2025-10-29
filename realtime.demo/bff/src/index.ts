@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { createClient } from '@supabase/supabase-js'
-import { SignJWT } from 'jose'
 
 type Bindings = {
   SUPABASE_URL: string
@@ -50,16 +49,49 @@ function getSupabaseClient(env: Bindings) {
 // ===================================
 
 /**
+ * Base64 URL エンコード
+ */
+function base64UrlEncode(data: ArrayBuffer): string {
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(data)))
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/**
  * Firebase Service Account から OAuth2 アクセストークンを取得
  */
 async function getAccessToken(env: Bindings): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
 
+  // JWT Header
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT',
+  }
+
+  // JWT Payload
+  const payload = {
+    iss: env.FCM_CLIENT_EMAIL,
+    sub: env.FCM_CLIENT_EMAIL,
+    aud: 'https://oauth2.googleapis.com/token',
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    iat: now,
+    exp: now + 3600,
+  }
+
+  // エンコード
+  const encoder = new TextEncoder()
+  const headerEncoded = base64UrlEncode(encoder.encode(JSON.stringify(header)))
+  const payloadEncoded = base64UrlEncode(encoder.encode(JSON.stringify(payload)))
+  const message = `${headerEncoded}.${payloadEncoded}`
+
   // PEM形式の秘密鍵をバイナリに変換
   const pemHeader = '-----BEGIN PRIVATE KEY-----'
   const pemFooter = '-----END PRIVATE KEY-----'
-  const pemContents = env.FCM_PRIVATE_KEY.replace(pemHeader, '')
+  const normalizedKey = env.FCM_PRIVATE_KEY.replace(/\\n/g, '\n').trim()
+  const pemContents = normalizedKey
+    .replace(pemHeader, '')
     .replace(pemFooter, '')
+    .replace(/\r?\n/g, '')
     .replace(/\s/g, '')
 
   const binaryDer = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0))
@@ -76,17 +108,11 @@ async function getAccessToken(env: Bindings): Promise<string> {
     ['sign']
   )
 
+  // 署名
+  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, encoder.encode(message))
+
   // JWT作成
-  const jwt = await new SignJWT({
-    scope: 'https://www.googleapis.com/auth/firebase.messaging',
-    aud: 'https://oauth2.googleapis.com/token',
-  })
-    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
-    .setIssuer(env.FCM_CLIENT_EMAIL)
-    .setSubject(env.FCM_CLIENT_EMAIL)
-    .setIssuedAt(now)
-    .setExpirationTime(now + 3600)
-    .sign(cryptoKey)
+  const jwt = `${message}.${base64UrlEncode(signature)}`
 
   // アクセストークンを取得
   const response = await fetch('https://oauth2.googleapis.com/token', {
@@ -126,9 +152,6 @@ async function sendFCMNotification(
         title,
         body,
       },
-      data: {
-        url: url || '/',
-      },
       webpush: {
         fcm_options: {
           link: url || '/',
@@ -139,6 +162,9 @@ async function sendFCMNotification(
 
   const fcmEndpoint = `https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`
 
+  console.log('[FCM] Sending to endpoint:', fcmEndpoint)
+  console.log('[FCM] Message payload:', JSON.stringify(message, null, 2))
+
   const response = await fetch(fcmEndpoint, {
     method: 'POST',
     headers: {
@@ -148,12 +174,16 @@ async function sendFCMNotification(
     body: JSON.stringify(message),
   })
 
+  console.log('[FCM] Response status:', response.status)
+
   if (!response.ok) {
     const error = await response.text()
     console.error('[FCM] Send failed:', response.status, error)
     throw new Error(`FCM send failed: ${error}`)
   }
 
+  const responseData = await response.json()
+  console.log('[FCM] Response data:', responseData)
   console.log('[FCM] Notification sent successfully')
 }
 
@@ -242,6 +272,36 @@ app.post('/api/fcm/send', async (c) => {
     return c.json({ message: 'Notification sent successfully' })
   } catch (error) {
     console.error('[FCM] Send error:', error)
+    return c.json({ error: 'Failed to send notification' }, 500)
+  }
+})
+
+/**
+ * 汎用通知送信（FCM経由）
+ */
+const NotifySchema = z.object({
+  token: z.string(),
+  title: z.string(),
+  body: z.string(),
+  link: z.string().optional(),
+})
+
+app.post('/api/notify', async (c) => {
+  const body = await c.req.json()
+  const parsed = NotifySchema.safeParse(body)
+
+  if (!parsed.success) {
+    console.error('[API] Invalid notify payload:', parsed.error)
+    return c.json({ error: 'Invalid notify payload' }, 400)
+  }
+
+  const { token, title, body: messageBody, link } = parsed.data
+
+  try {
+    await sendFCMNotification(c.env, token, title, messageBody, link)
+    return c.json({ ok: true })
+  } catch (error) {
+    console.error('[API] Notify error:', error)
     return c.json({ error: 'Failed to send notification' }, 500)
   }
 })

@@ -1,26 +1,52 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { 
-  registerServiceWorker, 
+import {
+  registerServiceWorker,
   requestNotificationPermission,
   subscribeToPush,
-  sendTestNotification 
+  sendTestNotification,
+  setupMessageListener,
+  sendMessage,
 } from '@/lib/push'
 import type { Message } from '@/lib/supabase'
 
 export default function Home() {
   const [userId, setUserId] = useState<string>('')
+  const [recipientId, setRecipientId] = useState<string>('')
+  const [feedUserId, setFeedUserId] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [pushEnabled, setPushEnabled] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
+  const activeChannel = useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  const loadMessages = useCallback(async (targetUserId: string) => {
+    if (!targetUserId) return
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) {
+      console.error('Load messages error:', error)
+    } else {
+      setMessages(data || [])
+    }
+  }, [])
 
   useEffect(() => {
     // クライアントサイドでのみランダムなユーザーIDを生成（Hydration Error回避）
-    setUserId(`user_${Math.random().toString(36).slice(2, 11)}`)
+    const generatedUserId = `user_${Math.random().toString(36).slice(2, 11)}`
+    setUserId(generatedUserId)
+    setRecipientId(generatedUserId)
+    setFeedUserId(generatedUserId)
+
     // PWAモード（A2HS済み）かチェック
     const isPWA = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as any).standalone === true
@@ -34,72 +60,117 @@ export default function Home() {
     // Service Worker 登録
     registerServiceWorker()
 
-    // メッセージを取得
-    loadMessages()
+    // FCM メッセージリスナーをセットアップ（初回のみ）
+    setupMessageListener()
 
-    // Realtime購読（リアルタイムUI更新）
+    // メッセージを取得
+    loadMessages(generatedUserId)
+  }, [loadMessages])
+
+  useEffect(() => {
+    if (!feedUserId) return
+
+    // 既存チャネルがあれば解除
+    if (activeChannel.current) {
+      supabase.removeChannel(activeChannel.current)
+      activeChannel.current = null
+    }
+
     const channel = supabase
-      .channel('messages')
+      .channel(`messages:user:${feedUserId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'messages' },
+        { event: '*', schema: 'public', table: 'messages', filter: `user_id=eq.${feedUserId}` },
         (payload) => {
-          console.log('[Realtime] Change received:', payload)
-          loadMessages()
+          console.log('[RT] messages change', payload)
+
+          setMessages((current) => {
+            switch (payload.eventType) {
+              case 'INSERT': {
+                const newMessage = payload.new as Message
+                const updated = [newMessage, ...current.filter((msg) => msg.id !== newMessage.id)]
+                return updated.sort((a, b) => (a.created_at > b.created_at ? -1 : 1)).slice(0, 20)
+              }
+              case 'UPDATE': {
+                const updatedMessage = payload.new as Message
+                return current
+                  .map((msg) => (msg.id === updatedMessage.id ? updatedMessage : msg))
+                  .sort((a, b) => (a.created_at > b.created_at ? -1 : 1))
+              }
+              case 'DELETE': {
+                const deletedId = payload.old?.id as string | undefined
+                if (!deletedId) return current
+                return current.filter((msg) => msg.id !== deletedId)
+              }
+              default:
+                return current
+            }
+          })
         }
       )
       .subscribe()
 
+    activeChannel.current = channel
+    loadMessages(feedUserId)
+
     return () => {
       supabase.removeChannel(channel)
+      activeChannel.current = null
     }
-  }, [])
-
-  const loadMessages = async () => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10)
-
-    if (error) {
-      console.error('Load messages error:', error)
-    } else {
-      setMessages(data || [])
-    }
-  }
+  }, [feedUserId, loadMessages])
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        user_id: userId,
-        content: newMessage,
-      })
-
-    if (error) {
-      console.error('Send message error:', error)
-      alert('メッセージ送信に失敗しました')
-    } else {
-      setNewMessage('')
+    if (!userId) {
+      alert('ユーザーIDを生成中です。数秒後に再度お試しください。')
+      return
     }
+
+    const trimmedMessage = newMessage.trim()
+    const targetUserId = recipientId.trim() || userId
+
+    const success = await sendMessage(userId, targetUserId, trimmedMessage)
+
+    if (!success) {
+      alert('メッセージ送信に失敗しました')
+      return
+    }
+
+    console.log('[UI] Message sent:', { from: userId, to: targetUserId, message: trimmedMessage })
+
+    if (targetUserId === userId) {
+      // 自分宛の場合は即座に最新状態を取得
+      await loadMessages(userId)
+    }
+
+    setNewMessage('')
   }
 
   const handleEnablePush = async () => {
-    const permission = await requestNotificationPermission()
-    setNotificationPermission(permission)
-
-    if (permission === 'granted') {
-      const success = await subscribeToPush(userId)
-      setPushEnabled(success)
+    try {
+      console.log('[UI] Starting push enable process...')
       
-      if (success) {
-        alert('✅ Push通知が有効になりました！')
+      const permission = await requestNotificationPermission()
+      console.log('[UI] Permission result:', permission)
+      setNotificationPermission(permission)
+
+      if (permission === 'granted') {
+        console.log('[UI] Calling subscribeToPush...')
+        const success = await subscribeToPush(userId)
+        console.log('[UI] Subscribe result:', success)
+        setPushEnabled(success)
+        
+        if (success) {
+          alert('✅ Push通知が有効になりました！')
+        } else {
+          alert('❌ Push通知の有効化に失敗しました')
+        }
       } else {
-        alert('❌ Push通知の有効化に失敗しました')
+        alert('⚠️ 通知許可が必要です')
       }
+    } catch (error) {
+      console.error('[UI] Enable push error:', error)
+      alert('❌ エラーが発生しました: ' + error)
     }
   }
 
@@ -182,6 +253,18 @@ export default function Home() {
           <p className="text-sm text-gray-600 mb-3">
             メッセージを送信すると、Realtime経由で即座に画面が更新されます
           </p>
+          <div className="mb-3">
+            <label className="text-sm text-gray-600 block mb-1">送り先ユーザーID（未指定なら自分宛て）</label>
+            <input
+              type="text"
+              value={recipientId}
+              onChange={(e) => setRecipientId(e.target.value)}
+              className="w-full border rounded px-3 py-2"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              別端末で Push を受け取りたい場合は、その端末の User ID を入力してください。
+            </p>
+          </div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -196,6 +279,28 @@ export default function Home() {
               className="bg-blue-600 text-white px-6 py-2 rounded font-medium hover:bg-blue-700"
             >
               送信
+            </button>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => {
+                if (!recipientId.trim()) return
+                setFeedUserId(recipientId.trim())
+                loadMessages(recipientId.trim())
+              }}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium hover:bg-gray-300"
+            >
+              表示をこのユーザーに切替
+            </button>
+            <button
+              onClick={() => {
+                if (!userId) return
+                setFeedUserId(userId)
+                loadMessages(userId)
+              }}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium hover:bg-gray-300"
+            >
+              自分宛の表示に戻す
             </button>
           </div>
         </div>
@@ -222,4 +327,3 @@ export default function Home() {
     </div>
   )
 }
-

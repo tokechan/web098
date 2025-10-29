@@ -3,7 +3,7 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
-import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging'
+import { getMessaging, getToken, onMessage, isSupported, type Messaging } from 'firebase/messaging'
 
 // Firebase設定
 const firebaseConfig = {
@@ -21,9 +21,33 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 
 // Messaging インスタンス（ブラウザのみ）
 let messaging: Messaging | null = null
+let messageListenerSetup = false // リスナーが既にセットアップされているかのフラグ
 
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  messaging = getMessaging(app)
+// Messagingインスタンスを遅延初期化する関数
+async function getMessagingInstance(): Promise<Messaging | null> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    console.warn('[FCM] Service Worker not supported')
+    return null
+  }
+  
+  // ブラウザがMessaging APIをサポートしているか確認
+  const supported = await isSupported()
+  if (!supported) {
+    console.error('[FCM] Messaging API not supported in this browser')
+    return null
+  }
+  
+  if (!messaging) {
+    try {
+      messaging = getMessaging(app)
+      console.log('[FCM] Messaging instance initialized successfully')
+    } catch (error) {
+      console.error('[FCM] Failed to initialize Messaging:', error)
+      return null
+    }
+  }
+  
+  return messaging
 }
 
 export { app, messaging }
@@ -32,14 +56,28 @@ export { app, messaging }
  * FCM トークンを取得
  */
 export async function getFCMToken(vapidKey: string): Promise<string | null> {
-  if (!messaging) {
+  if (!vapidKey) {
+    console.error('[FCM] Missing VAPID key. Set NEXT_PUBLIC_FCM_VAPID_KEY.')
+    return null
+  }
+
+  const messagingInstance = await getMessagingInstance()
+  
+  if (!messagingInstance) {
     console.warn('[FCM] Messaging not available')
     return null
   }
 
   try {
-    const token = await getToken(messaging, { vapidKey })
-    console.log('[FCM] Token obtained:', token)
+    // Service Worker登録を取得
+    const registration = await navigator.serviceWorker.ready
+    console.log('[FCM] Using service worker registration:', registration)
+    
+    const token = await getToken(messagingInstance, { 
+      vapidKey,
+      serviceWorkerRegistration: registration
+    })
+    console.log('[FCM] token', token)
     return token
   } catch (error) {
     console.error('[FCM] Failed to get token:', error)
@@ -50,15 +88,53 @@ export async function getFCMToken(vapidKey: string): Promise<string | null> {
 /**
  * フォアグラウンドメッセージを受信
  */
-export function onForegroundMessage(callback: (payload: any) => void) {
-  if (!messaging) {
+export async function onForegroundMessage(callback: (payload: any) => void) {
+  const messagingInstance = await getMessagingInstance()
+  
+  if (!messagingInstance) {
     console.warn('[FCM] Messaging not available')
     return
   }
 
-  onMessage(messaging, (payload) => {
-    console.log('[FCM] Foreground message received:', payload)
+  // 既にセットアップ済みの場合はスキップ
+  if (messageListenerSetup) {
+    console.log('[FCM] Message listener already setup, skipping...')
+    return
+  }
+
+  console.log('[FCM] Setting up foreground message listener...')
+  messageListenerSetup = true
+  
+  onMessage(messagingInstance, (payload) => {
+    console.log('[FCM] foreground payload:', payload)
+    
+    const title = payload.notification?.title || payload.data?.title || 'New Message'
+    const body = payload.notification?.body || payload.data?.body || ''
+    const url = payload?.fcmOptions?.link || payload.data?.url || '/'
+    
+    // フォアグラウンドでは手動で通知を表示
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const notification = new Notification(title, {
+        body,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        data: { url },
+      })
+      
+      // 通知クリック時にURLを開く
+      notification.onclick = () => {
+        window.focus()
+        if (url && url !== '/') {
+          window.location.href = url
+        }
+        notification.close()
+      }
+    } else {
+      console.warn('[FCM] Cannot show notification - Permission:', Notification?.permission)
+    }
+    
     callback(payload)
   })
+  
+  console.log('[FCM] Foreground message listener setup complete')
 }
-

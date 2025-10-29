@@ -40,6 +40,14 @@ realtime.demo/
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | アーキテクチャ解説 |
 | **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** | ファイル構成と役割 |
 
+コア実装:
+
+- `frontend/lib/firebase.ts` … Firebase 初期化・FCM トークン取得
+- `frontend/lib/push.ts` … FCM 購読と BFF 経由の REST 呼び出し
+- `frontend/public/firebase-messaging-sw.js` … 背景通知用 Service Worker
+- `bff/src/index.ts` … Hono API（FCM 送信 / Supabase 連携）
+- `supabase/schema.sql` … Supabase スキーマ
+
 ## 🔧 セットアップ（詳細版）
 
 ### 1. Supabase プロジェクト作成
@@ -130,6 +138,19 @@ npm run deploy
 
 詳細は [SETUP.md](./SETUP.md) を参照。
 
+## 動作確認フロー（iPhone PWA）
+
+1. Frontend をビルドし Cloudflare Pages にデプロイ。
+2. iPhone Safari で `https://pwa-push-demo-frontend.fleatoke.workers.dev` を開き、共有シートからホーム画面に追加。
+3. ホームから PWA を起動し、「Push通知を有効化」ボタンで通知許可とトークン登録を実施。
+4. BFF から通知送信テスト:
+   ```bash
+   curl -X POST https://pwa-push-demo-bff.fleatoke.workers.dev/api/notify \
+     -H "Content-Type: application/json" \
+     -d '{"token":"<FCM_TOKEN>","title":"チェック","body":"BFF経由テスト","link":"https://pwa-push-demo-frontend.fleatoke.workers.dev"}'
+   ```
+5. PWA を開いた状態でメッセージを送信し、別端末で Supabase Realtime 経由の即時更新を確認。
+
 ## 📖 学習リソース
 
 - [Hono Documentation](https://hono.dev/)
@@ -144,4 +165,3 @@ Issue・PRを歓迎します！
 ## 📄 ライセンス
 
 MIT
-
