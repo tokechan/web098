@@ -9,7 +9,8 @@
 │                    User Device                          │
 │  ┌──────────────────────────────────────────────────┐  │
 │  │  Next.js PWA (Frontend)                          │  │
-│  │  - Service Worker (sw.js)                        │  │
+│  │  - Service Worker (firebase-messaging-sw.js)     │  │
+│  │  - Firebase Cloud Messaging SDK                  │  │
 │  │  - Push API / Notifications API                  │  │
 │  │  - Supabase Realtime Client                      │  │
 │  └──────────────────────────────────────────────────┘  │
@@ -22,7 +23,7 @@
             │              ┌──────────────────────────┐
             │              │  Hono BFF                │
             │              │  (Cloudflare Workers)    │
-            │              │  - VAPID Push送信        │
+│              │  - FCMv1 Push送信        │
             │              │  - Supabase Client       │
             │              │  - Zod Validation        │
             │              └──────────────────────────┘
@@ -71,7 +72,7 @@ const channel = supabase
 **用途**: 通知センターへの到達、リエンゲージメント
 
 ```
-[イベント発生] → BFF → Web Push (VAPID) → 通知センター
+[イベント発生] → Hono BFF → Firebase Cloud Messaging v1 → 通知センター
 ```
 
 **特徴**:
@@ -83,10 +84,31 @@ const channel = supabase
 **実装**:
 ```typescript
 // BFF (Hono)
-import webpush from 'web-push'
+const message = {
+  message: {
+    token: fcmToken,
+    notification: { title, body },
+    webpush: {
+      notification: {
+        title,
+        body,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+      },
+      data: { url: url ?? '/' },
+      fcm_options: { link: url ?? '/' },
+    },
+  },
+}
 
-webpush.setVapidDetails(VAPID_MAILTO, PUBLIC_KEY, PRIVATE_KEY)
-await webpush.sendNotification(subscription, payload)
+await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${await getAccessToken()}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify(message),
+})
 ```
 
 ```javascript
@@ -129,15 +151,15 @@ self.addEventListener('push', (event) => {
    await supabase.from('messages').insert({ ... })
    
    // ② ユーザーBのPush購読を取得
-   const { data: subscription } = await supabase
-     .from('push_subscriptions')
-     .select('*')
-     .eq('user_id', 'B')
-     .single()
+  const { data: tokenRow } = await supabase
+    .from('fcm_tokens')
+    .select('fcm_token')
+    .eq('user_id', 'B')
+    .single()
    
    // ③ Push送信
-   await webpush.sendNotification(subscription, payload)
-   ```
+  await sendFCMNotification(env, tokenRow.fcm_token, 'ありがとう！', message, '/')
+```
 
 3. **Supabase Realtime**
    ```
@@ -179,24 +201,6 @@ useEffect(() => {
     📱 iOSで通知を受け取るには「ホーム画面に追加」してください
   </div>
 )}
-```
-
-## VAPIDとは
-
-**VAPID（Voluntary Application Server Identification）**
-
-Web Pushの送信者を識別するための仕組み。
-
-### キー生成
-
-```bash
-npx web-push generate-vapid-keys
-```
-
-出力：
-```
-Public Key: BJxxxxx...（フロントエンドで使用）
-Private Key: abcdef...（BFFで使用、秘密）
 ```
 
 ### 役割
@@ -380,4 +384,3 @@ Database > Logs で SQL実行ログを確認。
 6. ✅ **拡張性**（Queues、Cron、認証など）
 
 無駄を削ぎ落とした最小構成で、本番環境にも適用可能な設計です。
-

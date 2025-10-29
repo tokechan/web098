@@ -16,13 +16,14 @@ realtime.demo/
 │   │
 │   ├── lib/
 │   │   ├── supabase.ts        # Supabaseクライアント
-│   │   └── push.ts            # Web Push ユーティリティ
+│   │   ├── push.ts            # FCM / BFF ユーティリティ
+│   │   └── firebase.ts        # Firebase初期化とトークン管理
 │   │
 │   ├── public/
 │   │   ├── manifest.json      # PWA マニフェスト
-│   │   ├── sw.js              # Service Worker
-│   │   ├── icon-192.png       # PWA アイコン（要作成）
-│   │   ├── icon-512.png       # PWA アイコン（要作成）
+│   │   ├── firebase-messaging-sw.js  # Firebase Cloud Messaging SW
+│   │   ├── icon-192.png       # PWA アイコン
+│   │   ├── icon-512.png       # PWA アイコン
 │   │   └── ICONS.md           # アイコン作成ガイド
 │   │
 │   ├── package.json
@@ -56,13 +57,14 @@ Next.js で構築されたPWAフロントエンド。
 
 **主要機能**:
 - PWA対応（manifest.json, Service Worker）
-- Web Push購読管理
+- Firebase Cloud Messaging 購読・通知トリガ
 - Supabase Realtime接続
 - メッセージ送受信UI
 
 **依存関係**:
 - Next.js 14+
 - React 18+
+- firebase 12+
 - @supabase/supabase-js
 - Tailwind CSS
 
@@ -71,21 +73,21 @@ Next.js で構築されたPWAフロントエンド。
 Hono で構築されたBFF（Backend for Frontend）。Cloudflare Workers上で動作。
 
 **主要機能**:
-- Web Push送信（VAPID）
+- Firebase Cloud Messaging v1 送信（Service Account）
 - Supabase連携（Service Role）
 - 入力検証（Zod）
 - CORS設定
 
 **依存関係**:
 - Hono
-- web-push
 - @supabase/supabase-js
 - Zod
 
 **エンドポイント**:
-- `POST /api/push/subscribe` - Push購読の保存
-- `POST /api/push/send` - テスト通知送信
-- `POST /api/thanks` - 「ありがとう」送信（実例）
+- `POST /api/fcm/subscribe` - FCMトークン保存
+- `POST /api/fcm/send` - テスト通知送信
+- `POST /api/notify` - 任意トークン通知
+- `POST /api/thanks` - メッセージ保存 + 通知トリガ
 
 ### `supabase/`
 
@@ -97,18 +99,22 @@ Supabase（PostgreSQL）のスキーマ定義とセットアップガイド。
 
 ## 主要ファイル解説
 
-### `frontend/public/sw.js`
+### `frontend/public/firebase-messaging-sw.js`
 
-Service Worker。Web Pushの受信とクリックイベントを処理。
+Firebase Cloud Messaging の Service Worker。バックグラウンド通知とクリック遷移を処理。
 
 ```javascript
 self.addEventListener('push', (event) => { /* 通知表示 */ })
 self.addEventListener('notificationclick', (event) => { /* アプリ起動 */ })
 ```
 
+### `frontend/lib/firebase.ts`
+
+Firebase アプリ初期化と Messaging インスタンスの管理、トークン取得／フォアグラウンド通知を担当。
+
 ### `frontend/lib/push.ts`
 
-Web Push関連のユーティリティ関数集。
+FCM関連ユーティリティ。Service Worker 登録、通知許可、BFF への購読／送信を行う。
 
 - `registerServiceWorker()` - SW登録
 - `requestNotificationPermission()` - 通知許可
@@ -120,7 +126,7 @@ Web Push関連のユーティリティ関数集。
 Hono BFFのメインファイル。すべてのAPIエンドポイントを定義。
 
 **ポイント**:
-- VAPID設定（秘密鍵管理）
+- FCM Service Account で JWT を発行し、v1 API に送信
 - Supabase Service Role（最小権限）
 - Zodバリデーション
 
@@ -141,7 +147,7 @@ PostgreSQLスキーマ定義。
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhb...
 NEXT_PUBLIC_BFF_URL=http://localhost:8787
-NEXT_PUBLIC_VAPID_PUBLIC_KEY=BJxxxxx...
+NEXT_PUBLIC_FCM_VAPID_KEY=BJxxxxx...
 ```
 
 ### BFF (`.dev.vars`)
@@ -149,16 +155,17 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=BJxxxxx...
 ```bash
 SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJhb...
-VAPID_PUBLIC_KEY=BJxxxxx...
-VAPID_PRIVATE_KEY=abcdef...
-VAPID_MAILTO=mailto:your-email@example.com
+ALLOWED_ORIGINS=https://your-frontend.example.com
+FCM_PROJECT_ID=pwa-push-demo-xxxx
+FCM_CLIENT_EMAIL=firebase-adminsdk-xxxx@project.iam.gserviceaccount.com
+FCM_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----...
 ```
 
 ## 開発フロー
 
 ### 1. 初回セットアップ
 
-1. `SETUP.md` に従ってSupabase/VAPID設定
+1. `SETUP.md` に従って Supabase / FCM 設定（Service Account & VAPID 公開鍵）
 2. 環境変数ファイルを作成
 3. PWAアイコンを配置
 
@@ -249,4 +256,3 @@ export default {
 - [Cloudflare Workers](https://developers.cloudflare.com/workers/)
 - [Web Push API](https://developer.mozilla.org/en-US/docs/Web/API/Push_API)
 - [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
-

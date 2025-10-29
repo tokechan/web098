@@ -4,6 +4,19 @@
 
 ## [0.1.0] - 2025-10-28
 
+### 🔁 2025-10-29 リファイン
+
+- **FCM Web Push**
+  - Firebase JS SDK を 10.13.0 に更新し、Service Worker を `firebase-messaging-sw.js` に統一。
+  - FCM v1 ペイロードを `notification + webpush` 中心に再構成し、`data.url` と `fcm_options.link` を設定。
+  - `/api/notify` エンドポイントを追加し、任意トークンへの通知トリガーを提供。
+  - Frontend 側で送信リンクを絶対 URL で渡すよう統一。
+- **Supabase Realtime**
+  - `user_id` 単位の差分購読ロジックを導入し、メッセージ一覧を即時更新。
+  - フィード切り替え UI を追加して複端末検証をしやすく。
+- **ドキュメント**
+  - README / ARCHITECTURE / PROGRESS を更新し、検証手順と通知経路を明記。
+
 ### 🎉 初回リリース
 
 #### 追加
@@ -77,4 +90,3 @@
 ---
 
 フォーマット参考: [Keep a Changelog](https://keepachangelog.com/)
-
