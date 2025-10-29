@@ -154,6 +154,8 @@ export async function sendTestNotification(userId: string): Promise<boolean> {
  */
 export async function sendMessage(fromUserId: string, toUserId: string, message: string): Promise<boolean> {
   try {
+    console.log('[FCM] Sending message via BFF:', { fromUserId, toUserId, message })
+
     const response = await fetch(`${BFF_URL}/api/thanks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -166,7 +168,7 @@ export async function sendMessage(fromUserId: string, toUserId: string, message:
       return false
     }
 
-    console.log('[FCM] Message sent!')
+    console.log('[FCM] Message sent successfully')
     return true
   } catch (error) {
     console.error('[FCM] Error sending message:', error)

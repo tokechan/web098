@@ -142,16 +142,17 @@ async function sendFCMNotification(
 ): Promise<void> {
   const accessToken = await getAccessToken(env)
 
-  // data-only メッセージ（フォアグラウンド・バックグラウンド両方で動作）
   const message = {
     message: {
       token: fcmToken,
-      // notification フィールドを削除（data-only message）
-      data: {
+      notification: {
         title,
         body,
-        url: url || '/',
-        type: 'notification',
+      },
+      webpush: {
+        fcm_options: {
+          link: url || '/',
+        },
       },
     },
   }

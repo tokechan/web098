@@ -1,27 +1,49 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { 
-  registerServiceWorker, 
+import {
+  registerServiceWorker,
   requestNotificationPermission,
   subscribeToPush,
   sendTestNotification,
-  setupMessageListener
+  setupMessageListener,
+  sendMessage,
 } from '@/lib/push'
 import type { Message } from '@/lib/supabase'
 
 export default function Home() {
   const [userId, setUserId] = useState<string>('')
+  const [recipientId, setRecipientId] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [pushEnabled, setPushEnabled] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
 
+  const loadMessages = useCallback(async (targetUserId: string) => {
+    if (!targetUserId) return
+
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('user_id', targetUserId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) {
+      console.error('Load messages error:', error)
+    } else {
+      setMessages(data || [])
+    }
+  }, [])
+
   useEffect(() => {
     // クライアントサイドでのみランダムなユーザーIDを生成（Hydration Error回避）
-    setUserId(`user_${Math.random().toString(36).slice(2, 11)}`)
+    const generatedUserId = `user_${Math.random().toString(36).slice(2, 11)}`
+    setUserId(generatedUserId)
+    setRecipientId(generatedUserId)
+
     // PWAモード（A2HS済み）かチェック
     const isPWA = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as any).standalone === true
@@ -39,17 +61,17 @@ export default function Home() {
     setupMessageListener()
 
     // メッセージを取得
-    loadMessages()
+    loadMessages(generatedUserId)
 
     // Realtime購読（リアルタイムUI更新）
     const channel = supabase
-      .channel('messages')
+      .channel(`messages:user:${generatedUserId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'messages' },
+        { event: '*', schema: 'public', table: 'messages', filter: `user_id=eq.${generatedUserId}` },
         (payload) => {
           console.log('[Realtime] Change received:', payload)
-          loadMessages()
+          loadMessages(generatedUserId)
         }
       )
       .subscribe()
@@ -57,38 +79,33 @@ export default function Home() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
-
-  const loadMessages = async () => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10)
-
-    if (error) {
-      console.error('Load messages error:', error)
-    } else {
-      setMessages(data || [])
-    }
-  }
+  }, [loadMessages])
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        user_id: userId,
-        content: newMessage,
-      })
-
-    if (error) {
-      console.error('Send message error:', error)
-      alert('メッセージ送信に失敗しました')
-    } else {
-      setNewMessage('')
+    if (!userId) {
+      alert('ユーザーIDを生成中です。数秒後に再度お試しください。')
+      return
     }
+
+    const trimmedMessage = newMessage.trim()
+    const targetUserId = recipientId.trim() || userId
+
+    const success = await sendMessage(userId, targetUserId, trimmedMessage)
+
+    if (!success) {
+      alert('メッセージ送信に失敗しました')
+      return
+    }
+
+    console.log('[UI] Message sent:', { from: userId, to: targetUserId, message: trimmedMessage })
+
+    if (targetUserId === userId) {
+      // 自分宛の場合は即座に最新状態を取得
+      await loadMessages(userId)
+    }
+
+    setNewMessage('')
   }
 
   const handleEnablePush = async () => {
@@ -198,6 +215,18 @@ export default function Home() {
           <p className="text-sm text-gray-600 mb-3">
             メッセージを送信すると、Realtime経由で即座に画面が更新されます
           </p>
+          <div className="mb-3">
+            <label className="text-sm text-gray-600 block mb-1">送り先ユーザーID（未指定なら自分宛て）</label>
+            <input
+              type="text"
+              value={recipientId}
+              onChange={(e) => setRecipientId(e.target.value)}
+              className="w-full border rounded px-3 py-2"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              別端末で Push を受け取りたい場合は、その端末の User ID を入力してください。
+            </p>
+          </div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -238,4 +267,3 @@ export default function Home() {
     </div>
   )
 }
-

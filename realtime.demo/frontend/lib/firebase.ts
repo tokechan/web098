@@ -56,6 +56,11 @@ export { app, messaging }
  * FCM トークンを取得
  */
 export async function getFCMToken(vapidKey: string): Promise<string | null> {
+  if (!vapidKey) {
+    console.error('[FCM] Missing VAPID key. Set NEXT_PUBLIC_FCM_VAPID_KEY.')
+    return null
+  }
+
   const messagingInstance = await getMessagingInstance()
   
   if (!messagingInstance) {
@@ -72,7 +77,7 @@ export async function getFCMToken(vapidKey: string): Promise<string | null> {
       vapidKey,
       serviceWorkerRegistration: registration
     })
-    console.log('[FCM] Token obtained:', token)
+    console.log('[FCM] token', token)
     return token
   } catch (error) {
     console.error('[FCM] Failed to get token:', error)
@@ -101,20 +106,14 @@ export async function onForegroundMessage(callback: (payload: any) => void) {
   messageListenerSetup = true
   
   onMessage(messagingInstance, (payload) => {
-    console.log('[FCM] Foreground message received:', payload)
-    console.log('[FCM] Payload data:', payload.data)
-    console.log('[FCM] Payload notification:', payload.notification)
+    console.log('[FCM] foreground payload:', payload)
     
-    // data-only メッセージから情報を取得（notification は使わない）
-    const title = payload.data?.title || payload.notification?.title || 'New Message'
-    const body = payload.data?.body || payload.notification?.body || ''
-    const url = payload.data?.url || payload.fcmOptions?.link || '/'
-    
-    console.log('[FCM] Extracted - Title:', title, 'Body:', body, 'URL:', url)
+    const title = payload.notification?.title || payload.data?.title || 'New Message'
+    const body = payload.notification?.body || payload.data?.body || ''
+    const url = payload?.fcmOptions?.link || payload.data?.url || '/'
     
     // フォアグラウンドでは手動で通知を表示
     if ('Notification' in window && Notification.permission === 'granted') {
-      console.log('[FCM] Creating notification...')
       const notification = new Notification(title, {
         body,
         icon: '/icon-192.png',
@@ -122,11 +121,8 @@ export async function onForegroundMessage(callback: (payload: any) => void) {
         data: { url },
       })
       
-      console.log('[FCM] Notification created:', notification)
-      
       // 通知クリック時にURLを開く
       notification.onclick = () => {
-        console.log('[FCM] Notification clicked')
         window.focus()
         if (url && url !== '/') {
           window.location.href = url
@@ -142,4 +138,3 @@ export async function onForegroundMessage(callback: (payload: any) => void) {
   
   console.log('[FCM] Foreground message listener setup complete')
 }
-
