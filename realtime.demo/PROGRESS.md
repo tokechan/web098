@@ -9,6 +9,7 @@
 - Realtime 購読は `user_id` ごとにフィルタし、受信ユーザーのメッセージだけを即時反映します。
 - `frontend/lib/push.ts` で BFF 経由の送信内容をログに残すようにし、原因調査に必要な最低限の情報を出力します。
 - iPhone PWA 手動検証手順を追記。ホーム追加後に Push を受け取りながら、BFF `wrangler tail` と Frontend/Service Worker のコンソールで状況を確認できます。
+- BFF に汎用通知エンドポイント `/api/notify` を追加し、Service Account で安全に FCΜ へ通知を送れるようにしました。
 
 ### ✅ 再現手順（iPhone Safari 16.4+）
 1. `https://pwa-push-demo-frontend.fleatoke.workers.dev` を Safari で開き、画面右上の共有メニューから **ホーム画面に追加**。
@@ -20,6 +21,7 @@
    - BFF: `cd bff && npx wrangler tail --format pretty`
    - Frontend: Safari の Web Inspector → Console
    - Service Worker: Web Inspector → Resources → Service Workers → Console
+   - BFF 汎用通知テスト: `curl -X POST https://pwa-push-demo-bff.fleatoke.workers.dev/api/notify -H "Content-Type: application/json" -d '{"token":"<FCM_TOKEN>","title":"チェック","body":"BFF経由テスト","link":"https://pwa-push-demo-frontend.fleatoke.workers.dev"}'`
 
 - Safari で通知が届かない場合は、ホーム追加をやり直し、通知権限が `granted` になっているかを UI で確認してください。
 

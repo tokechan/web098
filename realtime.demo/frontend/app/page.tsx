@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   registerServiceWorker,
@@ -15,11 +15,13 @@ import type { Message } from '@/lib/supabase'
 export default function Home() {
   const [userId, setUserId] = useState<string>('')
   const [recipientId, setRecipientId] = useState<string>('')
+  const [feedUserId, setFeedUserId] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [pushEnabled, setPushEnabled] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
+  const activeChannel = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   const loadMessages = useCallback(async (targetUserId: string) => {
     if (!targetUserId) return
@@ -43,6 +45,7 @@ export default function Home() {
     const generatedUserId = `user_${Math.random().toString(36).slice(2, 11)}`
     setUserId(generatedUserId)
     setRecipientId(generatedUserId)
+    setFeedUserId(generatedUserId)
 
     // PWAモード（A2HS済み）かチェック
     const isPWA = window.matchMedia('(display-mode: standalone)').matches
@@ -62,24 +65,59 @@ export default function Home() {
 
     // メッセージを取得
     loadMessages(generatedUserId)
+  }, [loadMessages])
 
-    // Realtime購読（リアルタイムUI更新）
+  useEffect(() => {
+    if (!feedUserId) return
+
+    // 既存チャネルがあれば解除
+    if (activeChannel.current) {
+      supabase.removeChannel(activeChannel.current)
+      activeChannel.current = null
+    }
+
     const channel = supabase
-      .channel(`messages:user:${generatedUserId}`)
+      .channel(`messages:user:${feedUserId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'messages', filter: `user_id=eq.${generatedUserId}` },
+        { event: '*', schema: 'public', table: 'messages', filter: `user_id=eq.${feedUserId}` },
         (payload) => {
-          console.log('[Realtime] Change received:', payload)
-          loadMessages(generatedUserId)
+          console.log('[RT] messages change', payload)
+
+          setMessages((current) => {
+            switch (payload.eventType) {
+              case 'INSERT': {
+                const newMessage = payload.new as Message
+                const updated = [newMessage, ...current.filter((msg) => msg.id !== newMessage.id)]
+                return updated.sort((a, b) => (a.created_at > b.created_at ? -1 : 1)).slice(0, 20)
+              }
+              case 'UPDATE': {
+                const updatedMessage = payload.new as Message
+                return current
+                  .map((msg) => (msg.id === updatedMessage.id ? updatedMessage : msg))
+                  .sort((a, b) => (a.created_at > b.created_at ? -1 : 1))
+              }
+              case 'DELETE': {
+                const deletedId = payload.old?.id as string | undefined
+                if (!deletedId) return current
+                return current.filter((msg) => msg.id !== deletedId)
+              }
+              default:
+                return current
+            }
+          })
         }
       )
       .subscribe()
 
+    activeChannel.current = channel
+    loadMessages(feedUserId)
+
     return () => {
       supabase.removeChannel(channel)
+      activeChannel.current = null
     }
-  }, [loadMessages])
+  }, [feedUserId, loadMessages])
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return
@@ -241,6 +279,28 @@ export default function Home() {
               className="bg-blue-600 text-white px-6 py-2 rounded font-medium hover:bg-blue-700"
             >
               送信
+            </button>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => {
+                if (!recipientId.trim()) return
+                setFeedUserId(recipientId.trim())
+                loadMessages(recipientId.trim())
+              }}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium hover:bg-gray-300"
+            >
+              表示をこのユーザーに切替
+            </button>
+            <button
+              onClick={() => {
+                if (!userId) return
+                setFeedUserId(userId)
+                loadMessages(userId)
+              }}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded font-medium hover:bg-gray-300"
+            >
+              自分宛の表示に戻す
             </button>
           </div>
         </div>

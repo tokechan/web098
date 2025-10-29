@@ -274,6 +274,36 @@ app.post('/api/fcm/send', async (c) => {
 })
 
 /**
+ * 汎用通知送信（FCM経由）
+ */
+const NotifySchema = z.object({
+  token: z.string(),
+  title: z.string(),
+  body: z.string(),
+  link: z.string().optional(),
+})
+
+app.post('/api/notify', async (c) => {
+  const body = await c.req.json()
+  const parsed = NotifySchema.safeParse(body)
+
+  if (!parsed.success) {
+    console.error('[API] Invalid notify payload:', parsed.error)
+    return c.json({ error: 'Invalid notify payload' }, 400)
+  }
+
+  const { token, title, body: messageBody, link } = parsed.data
+
+  try {
+    await sendFCMNotification(c.env, token, title, messageBody, link)
+    return c.json({ ok: true })
+  } catch (error) {
+    console.error('[API] Notify error:', error)
+    return c.json({ error: 'Failed to send notification' }, 500)
+  }
+})
+
+/**
  * メッセージ送信（Supabase Realtime + FCM Push）
  */
 const ThanksSchema = z.object({
