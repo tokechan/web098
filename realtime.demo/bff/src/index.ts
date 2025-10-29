@@ -153,6 +153,15 @@ async function sendFCMNotification(
         body,
       },
       webpush: {
+        notification: {
+          title,
+          body,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+        },
+        data: {
+          url: url || '/',
+        },
         fcm_options: {
           link: url || '/',
         },
@@ -313,6 +322,7 @@ const ThanksSchema = z.object({
   fromUserId: z.string(),
   toUserId: z.string(),
   message: z.string(),
+  url: z.string().optional(),
 })
 
 app.post('/api/thanks', async (c) => {
@@ -325,7 +335,7 @@ app.post('/api/thanks', async (c) => {
     return c.json({ error: 'Invalid message data' }, 400)
   }
 
-  const { fromUserId, toUserId, message } = parsed.data
+  const { fromUserId, toUserId, message, url } = parsed.data
 
   try {
     // Supabase にメッセージを保存（Realtime経由で配信）
@@ -350,7 +360,13 @@ app.post('/api/thanks', async (c) => {
 
     if (tokenData) {
       try {
-        await sendFCMNotification(c.env, tokenData.fcm_token, '💝 ありがとうが届きました！', message, '/')
+        await sendFCMNotification(
+          c.env,
+          tokenData.fcm_token,
+          '💝 ありがとうが届きました！',
+          message,
+          url || '/'
+        )
         console.log('[FCM] Push notification sent to user:', toUserId)
       } catch (fcmError) {
         console.error('[FCM] Failed to send push notification:', fcmError)
