@@ -87,8 +87,11 @@ async function getAccessToken(env: Bindings): Promise<string> {
   // PEM形式の秘密鍵をバイナリに変換
   const pemHeader = '-----BEGIN PRIVATE KEY-----'
   const pemFooter = '-----END PRIVATE KEY-----'
-  const pemContents = env.FCM_PRIVATE_KEY.replace(pemHeader, '')
+  const normalizedKey = env.FCM_PRIVATE_KEY.replace(/\\n/g, '\n').trim()
+  const pemContents = normalizedKey
+    .replace(pemHeader, '')
     .replace(pemFooter, '')
+    .replace(/\r?\n/g, '')
     .replace(/\s/g, '')
 
   const binaryDer = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0))
