@@ -10,6 +10,8 @@
 - `frontend/lib/push.ts` で BFF 経由の送信内容をログに残すようにし、原因調査に必要な最低限の情報を出力します。
 - iPhone PWA 手動検証手順を追記。ホーム追加後に Push を受け取りながら、BFF `wrangler tail` と Frontend/Service Worker のコンソールで状況を確認できます。
 - BFF に汎用通知エンドポイント `/api/notify` を追加し、Service Account で安全に FCΜ へ通知を送れるようにしました。
+- FCM ペイロードを `notification + webpush` 中心に再構成し、`data.url` に遷移先を格納。Frontend 側も絶対 URL で渡すよう統一しました。
+- Chrome (macOS) では FCM 通知トーストの配信まで確認済み。iPhone PWA ではトークン取得〜FCM 200 応答を確認済みだが、通知トーストが未表示のままという課題が残っています（切り分け継続中）。
 
 ### ✅ 再現手順（iPhone Safari 16.4+）
 1. `https://pwa-push-demo-frontend.fleatoke.workers.dev` を Safari で開き、画面右上の共有メニューから **ホーム画面に追加**。

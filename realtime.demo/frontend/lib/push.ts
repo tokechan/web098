@@ -124,6 +124,7 @@ export async function subscribeToPush(userId: string): Promise<boolean> {
  */
 export async function sendTestNotification(userId: string): Promise<boolean> {
   try {
+    const link = typeof window !== 'undefined' ? `${window.location.origin}/` : '/'
     const response = await fetch(`${BFF_URL}/api/fcm/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -131,7 +132,7 @@ export async function sendTestNotification(userId: string): Promise<boolean> {
         userId,
         title: 'テスト通知',
         body: 'これはFCM経由のテスト通知です！',
-        url: '/',
+        url: link,
       }),
     })
 
@@ -159,7 +160,12 @@ export async function sendMessage(fromUserId: string, toUserId: string, message:
     const response = await fetch(`${BFF_URL}/api/thanks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fromUserId, toUserId, message }),
+      body: JSON.stringify({
+        fromUserId,
+        toUserId,
+        message,
+        url: typeof window !== 'undefined' ? `${window.location.origin}/` : '/',
+      }),
     })
 
     if (!response.ok) {
