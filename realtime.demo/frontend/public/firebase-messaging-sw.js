@@ -17,18 +17,19 @@ const messaging = firebase.messaging()
 messaging.onBackgroundMessage((payload) => {
   console.log('[SW] onBackgroundMessage', payload)
 
-  const { title, body, icon } = payload.notification || {}
-  const notificationTitle = title || 'Hey!'
-  const notificationBody = body || 'You have a new message.'
-  const notificationIcon = icon || '/icon-192.png'
-  const link =
-    payload?.fcmOptions?.link ||
-    payload?.data?.url ||
-    '/'
+  // ブラウザが notification メッセージをそのまま表示するケースでは二重表示を避ける
+  if (payload.notification) {
+    console.log('[SW] Notification handled by browser:', payload.notification)
+    return
+  }
+
+  const notificationTitle = payload.data?.title || 'Hey!'
+  const notificationBody = payload.data?.body || 'You have a new message.'
+  const link = payload?.fcmOptions?.link || payload?.data?.url || '/'
 
   self.registration.showNotification(notificationTitle, {
     body: notificationBody,
-    icon: notificationIcon,
+    icon: '/icon-192.png',
     badge: '/icon-192.png',
     data: { url: link },
   })
