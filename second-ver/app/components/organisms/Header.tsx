@@ -3,6 +3,7 @@ import type { FC } from 'hono/jsx';
 import { useRequestContext } from 'hono/jsx-renderer';
 import NavToggle from '../atoms/$NavToggle';
 import { container } from '../../styles/tokens';
+import { primaryNavLinks, siteBrand, type NavLink } from '../../lib/navigation';
 
 const headerClass = css`
   border-bottom: 3px solid var(--color-accent);
@@ -143,16 +144,8 @@ const activeLinkClass = css`
   font-weight: 600;
 `;
 
-export type NavLink = { href: string; text: string };
-
-const defaultLinks: readonly NavLink[] = [
-  { href: '/', text: 'Home' },
-  { href: '/blogs', text: 'Blogs' },
-  { href: '/labs', text: 'Labs' },
-] as const;
-
 export const Header: FC<{ links?: readonly NavLink[] }> = ({
-  links: navLinks = defaultLinks,
+  links: navLinks = primaryNavLinks,
 }) => {
   const c = useRequestContext();
   const current = c.req.path;
@@ -161,8 +154,8 @@ export const Header: FC<{ links?: readonly NavLink[] }> = ({
     <header class={headerClass}>
       <div class={cx(container, innerClass)}>
         <h1 class={titleClass}>
-          <a href="/" class={brandLink}>
-            tokeC Room
+          <a href={siteBrand.homeHref} class={brandLink}>
+            {siteBrand.name}
           </a>
         </h1>
 
