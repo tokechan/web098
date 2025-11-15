@@ -32,7 +32,12 @@
     --space-9: 3rem;
   
     --radius-sm: .25rem;
-    --radius-md: .375rem;
-    --radius-lg: .5rem;
-  }
+  --radius-md: .375rem;
+  --radius-lg: .5rem;
+
+  /* === Page layout spacing === */
+  --page-gap: clamp(3rem, 6vw, 5rem);
+  --page-padding-top: clamp(4rem, 12vw, 8rem);
+  --page-padding-bottom: clamp(6rem, 14vw, 10rem);
+}
   

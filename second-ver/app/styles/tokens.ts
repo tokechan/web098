@@ -23,3 +23,17 @@ export const linkReset = css`
     border-color: var(--color-secondary);
   }
 `
+
+export const pageShell = css`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+`
+
+export const pageMain = css`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-gap);
+  padding-block: var(--page-padding-top) var(--page-padding-bottom);
+`
