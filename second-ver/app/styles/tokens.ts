@@ -13,6 +13,33 @@ export const cardSurface = css`
   padding: var(--space-5);
 `
 
+export const sectionStack = css`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+`
+
+export const gridAutoCards = css`
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+`
+
+export const listReset = css`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`
+
+export const serifHeading = css`
+  font-family: var(--font-serif);
+  letter-spacing: var(--letter-spacing-wide);
+`
+
+export const mutedCopy = css`
+  color: var(--color-muted);
+`
+
 export const linkReset = css`
   text-decoration: none;
   color: var(--color-accent);
