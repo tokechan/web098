@@ -1,18 +1,7 @@
 import { createRoute } from 'honox/factory';
 import { css } from 'hono/css';
 import { prose } from '../../styles/prose';
-import type { FC } from 'hono/jsx';
-import { toSlug } from '../../lib/slug';
-
-type PostMod = {
-  frontmatter?: {
-    title?: string;
-    date?: string;
-    tags?: string[];
-    description?: string;
-  };
-  default: FC;
-};
+import { getPostBySlug } from '../../lib/posts';
 
 const pageWrap = css`
   max-width: var(--container-max);
@@ -40,26 +29,20 @@ const tag = css`
   border-radius: 0.35rem;
 `;
 
-const modules = import.meta.glob<PostMod>('../../content/blog/**/*.mdx', {
-  eager: true,
-});
-
-
 export default createRoute(async (c) => {
   const slug = c.req.param('slug');
 
-  const match = Object.entries(modules).find(([path]) => toSlug(path) === slug);
-  if (!match) {
-    console.warn('MDX not found for slug', slug, Object.keys(modules));
+  const post = getPostBySlug(slug);
+  if (!post) {
+    console.warn('MDX not found for slug', slug);
     return c.notFound();
   }
 
-  const [, mod] = match;
-  const Article = mod.default;
-  const fm = mod.frontmatter ?? {};
+  const Article = post.content;
+  const fm = post.frontmatter ?? {};
 
   return c.render(
-    <main class={pageWrap}>    
+    <main class={pageWrap}>
       <header>
         <h1>{fm.title ?? '(no title)'}</h1>
         <div class={meta}>
@@ -68,13 +51,15 @@ export default createRoute(async (c) => {
           {fm.tags && fm.tags.length > 0 && (
             <div class={tagList}>
               {fm.tags.map((t) => (
-                <span class={tag} key={t}>{t}</span>
+                <span class={tag} key={t}>
+                  {t}
+                </span>
               ))}
             </div>
           )}
         </div>
       </header>
-    
+
       <article class={prose}>
         <Article />
       </article>
