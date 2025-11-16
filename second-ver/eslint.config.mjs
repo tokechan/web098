@@ -1,11 +1,8 @@
-import path from 'node:path';
 import js from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import tailwind from 'eslint-plugin-tailwindcss';
 import prettier from 'eslint-config-prettier';
-
-const tailwindDesignSystem = path.resolve('app/style.css');
 
 export default [
   js.configs.recommended,
@@ -30,7 +27,7 @@ export default [
     },
     settings: {
       tailwindcss: {
-        config: tailwindDesignSystem,
+        config: 'tailwind.config.cjs',
       },
     },
     rules: {
