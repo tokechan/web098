@@ -12,22 +12,29 @@ export type HomeHeroContent = {
   scale?: 'default' | 'hero';
 };
 
-export const homeHeroContent: HomeHeroContent = {
-  showHeading: true,
-  headingPrimary: 'Trying Anyway',
-  headingSecondary: 'Tiny Experiments',
-  headingAccent: 'Messy but Curious',
-  editionLabel: 'Develop Edition',
-  footerText: 'Crafted For Curious Minds',
-  metaSections: [
-    { label: 'IDEA SOURCE', value: 'HISTORICAL CONTEXT', variant: 'script' },
-    { label: 'CRAFTED BY', value: 'tokec', variant: 'signature' },
-    { label: 'STATE', value: 'IN PROGRESS', variant: 'script' },
-  ],
-  ariaLabel: 'Trying Anyway — Tiny Experiments — Messy but Curious',
-  scale: 'hero',
-};
+const moduleImport = import.meta.glob('../content/home/hero.mdx', {
+  eager: true,
+});
 
+const heroData = (() => {
+  const entry = Object.values(moduleImport)[0] as { frontmatter?: Record<string, unknown> } | undefined;
+  const fm = entry?.frontmatter ?? {};
+  const metaSections = (fm.metaSections as BadgeMetaSection[]) ?? [];
+  return {
+    showHeading: fm.showHeading ?? true,
+    headingPrimary: (fm.title as string) ?? 'Trying Anyway',
+    headingSecondary: (fm.secondary as string) ?? 'Tiny Experiments',
+    headingAccent: (fm.accent as string) ?? 'Messy but Curious',
+    editionLabel: (fm.edition as string) ?? 'Develop Edition',
+    footerText: (fm.footer as string) ?? 'Crafted For Curious Minds',
+    metaSections,
+    ariaLabel: fm.ariaLabel ?? `${fm.title ?? 'Trying Anyway'} ${fm.secondary ?? 'Tiny Experiments'}`,
+    scale: 'hero',
+    showClock: fm.showClock ?? true,
+  } satisfies HomeHeroContent & { showClock: boolean };
+})();
+
+export const homeHeroContent = heroData;
 export const homePageSettings = {
-  showClock: true,
+  showClock: heroData.showClock,
 };
