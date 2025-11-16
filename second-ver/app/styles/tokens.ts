@@ -6,7 +6,7 @@ export const container = css`
   padding-inline: clamp(1.25rem, 5vw, 3.5rem);
 `
 
-export const card = css`
+export const cardSurface = css`
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -36,4 +36,24 @@ export const pageMain = css`
   flex-direction: column;
   gap: var(--page-gap);
   padding-block: var(--page-padding-top) var(--page-padding-bottom);
+`
+
+export const metaText = css`
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+`
+
+export const tagPill = css`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(63, 112, 77, 0.12);
+  color: var(--color-accent);
 `

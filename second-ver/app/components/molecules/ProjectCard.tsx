@@ -1,5 +1,6 @@
-import { css } from 'hono/css';
+import { css, cx } from 'hono/css';
 import type { FC } from 'hono/jsx';
+import { cardSurface, metaText, tagPill } from '../../styles/tokens';
 
 type ProjectCardProps = {
   name: string;
@@ -12,7 +13,7 @@ type ProjectCardProps = {
 const card = css`
   padding: 1.25rem 1.35rem;
   border-radius: 1rem;
-  border: 1px solid rgba(63, 112, 77, 0.2);
+  border-color: rgba(63, 112, 77, 0.2);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 247, 244, 0.96));
   display: flex;
   flex-direction: column;
@@ -55,24 +56,13 @@ const tagsWrap = css`
   gap: 0.4rem;
 `;
 
-const tagStyle = css`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 0.35rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(63, 112, 77, 0.12);
-  color: var(--color-accent);
+const statusTone = css`
+  color: rgba(63, 112, 77, 0.72);
 `;
 
-const statusStyle = css`
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(63, 112, 77, 0.72);
+const tagAccent = css`
+  background: rgba(63, 112, 77, 0.12);
+  color: var(--color-accent);
 `;
 
 const statusLabel: Record<Required<ProjectCardProps>['status'], string> = {
@@ -88,16 +78,16 @@ export const ProjectCard: FC<ProjectCardProps> = ({
   href,
   status = 'experiment',
 }) => (
-  <article class={card}>
+  <article class={cx(cardSurface, card)}>
     <h3 class={nameStyle}>
       {href ? <a href={href}>{name}</a> : name}
-      <span class={statusStyle}>{statusLabel[status]}</span>
+      <span class={cx(metaText, statusTone)}>{statusLabel[status]}</span>
     </h3>
     <p class={summaryStyle}>{summary}</p>
     {tags && tags.length > 0 && (
       <div class={tagsWrap}>
         {tags.map((tag) => (
-          <span key={tag} class={tagStyle}>
+          <span key={tag} class={cx(tagPill, tagAccent)}>
             {tag}
           </span>
         ))}
