@@ -19,6 +19,25 @@ export const sectionStack = css`
   gap: var(--space-7);
 `
 
+export const heroSection = css`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  text-align: center;
+`
+
+export const heroTitle = css`
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 8vw, 3rem);
+`
+
+export const heroMeta = css`
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+`
+
 export const gridAutoCards = css`
   display: grid;
   gap: var(--space-4);

@@ -8,6 +8,7 @@ import { LabsShowcase } from '../organisms/LabsShowcase';
 import type { ProjectSummary } from '../../lib/projects';
 import type { HomeHeroContent } from '../../lib/homeContent';
 import { homeHeroContent as defaultHeroContent } from '../../lib/homeContent';
+import { heroSection, heroTitle, heroMeta } from '../../styles/tokens';
 
 const wrapperStyle = css`
   display: flex;
@@ -45,7 +46,13 @@ export const HomePage: FC<HomePageProps> = ({
         <Time />
       </div>
     )}
-    <FooterBadge {...heroContent} />
+    <section class={heroSection}>
+      <h1 class={heroTitle}>{heroContent.headingPrimary}</h1>
+      {heroContent.headingSecondary && (
+        <p class={heroMeta}>{heroContent.headingSecondary}</p>
+      )}
+      <FooterBadge {...heroContent} />
+    </section>
     <LatestPosts posts={latestPosts} />
     <LabsShowcase projects={projects} />
   </div>
