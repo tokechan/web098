@@ -2,17 +2,17 @@ import { css, cx } from 'hono/css';
 import type { JSX } from 'hono/jsx';
 import { FooterBadgeHeading } from '../atoms/FooterBadgeHeading';
 
-type BadgeSectionVariant = 'value' | 'script' | 'signature' | 'links';
+export type BadgeSectionVariant = 'value' | 'script' | 'signature' | 'links';
 
-type BadgeMetaSection = {
+export type BadgeMetaSection = {
   label: string;
   value: string | JSX.Element;
   variant?: BadgeSectionVariant;
 };
 
-type FooterBadgeVariant = 'badge' | 'strip';
+export type FooterBadgeVariant = 'badge' | 'strip';
 
-type FooterBadgeProps = {
+export type FooterBadgeProps = {
   showHeading?: boolean;
   headingPrimary?: string;
   headingSecondary?: string;

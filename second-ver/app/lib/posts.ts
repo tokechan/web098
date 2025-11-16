@@ -1,16 +1,6 @@
-import type { FC } from 'hono/jsx';
+import type { PostFrontmatter, PostModule } from '../types/mdx';
 import { toSlug } from './slug';
 import { postUrl } from './paths';
-
-type PostModule = {
-  frontmatter?: {
-    title?: string;
-    date?: string;
-    tags?: string[];
-    description?: string;
-  };
-  default: FC;
-};
 
 export type PostSummary = {
   slug: string;
@@ -20,28 +10,50 @@ export type PostSummary = {
   url: string;
 };
 
+export type PostDetail = PostSummary & {
+  tags?: string[];
+  content: PostModule['default'];
+  frontmatter: PostFrontmatter;
+};
+
 const modules = import.meta.glob<PostModule>('../content/blog/**/*.mdx', {
   eager: true,
 });
 
-const allPosts: PostSummary[] = Object.entries(modules)
-  .map(([path, mod]) => {
-    const slug = toSlug(path);
-    const title = mod.frontmatter?.title ?? '(no title)';
-    const date = mod.frontmatter?.date ?? '';
-    const description = mod.frontmatter?.description ?? '';
+const allEntries = Object.entries(modules).map(([path, mod]) => {
+  const slug = toSlug(path);
+  const frontmatter = mod.frontmatter ?? {};
+  return {
+    slug,
+    frontmatter,
+    component: mod.default,
+  };
+});
 
-    return {
-      slug,
-      title,
-      date,
-      description,
-      url: postUrl(slug),
-    };
-  })
+const allPosts: PostSummary[] = allEntries
+  .map(({ slug, frontmatter }) => ({
+    slug,
+    title: frontmatter.title ?? '(no title)',
+    date: frontmatter.date ?? '',
+    description: frontmatter.description ?? '',
+    url: postUrl(slug),
+  }))
   .sort((a, b) => +new Date(b.date) - +new Date(a.date));
 
 export const getRecentPosts = (limit = 3): PostSummary[] =>
   allPosts.slice(0, Math.max(0, limit));
 
 export const getAllPosts = (): PostSummary[] => [...allPosts];
+
+export const getPostBySlug = (slug: string) => {
+  const entry = allEntries.find((item) => item.slug === slug);
+  if (!entry) return undefined;
+
+  const summary = allPosts.find((post) => post.slug === slug)!;
+  return {
+    ...summary,
+    tags: entry.frontmatter.tags,
+    content: entry.component,
+    frontmatter: entry.frontmatter,
+  } satisfies PostDetail;
+};

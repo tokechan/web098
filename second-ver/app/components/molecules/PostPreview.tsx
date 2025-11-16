@@ -1,6 +1,8 @@
-import { css } from 'hono/css';
+import { css, cx } from 'hono/css';
 import type { FC } from 'hono/jsx';
 import type { PostSummary } from '../../lib/posts';
+import { cardSurface, metaText } from '../../styles/tokens';
+import { formatDisplayDate, toISODate } from '../../lib/formatters';
 
 const card = css`
   position: relative;
@@ -8,14 +10,12 @@ const card = css`
   flex-direction: column;
   gap: 0.5rem;
   padding: 1.1rem;
-  border: 1px solid var(--color-border);
   border-radius: 0.75rem;
   background: rgba(255, 255, 255, 0.92);
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 
   &:hover {
     transform: translateY(-2px);
-    border-color: var(--color-accent);
     box-shadow: 0 14px 34px rgba(28, 50, 40, 0.15);
   }
 
@@ -44,13 +44,6 @@ const title = css`
   }
 `;
 
-const meta = css`
-  font-size: 0.82rem;
-  color: var(--color-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-`;
-
 const description = css`
   font-size: 0.9rem;
   color: var(--color-muted);
@@ -62,13 +55,13 @@ type PostPreviewProps = {
 };
 
 export const PostPreview: FC<PostPreviewProps> = ({ post }) => (
-  <article class={card}>
+  <article class={cx(cardSurface, card)}>
     <h3 class={title}>
       <a href={post.url}>{post.title}</a>
     </h3>
     {post.date && (
-      <time datetime={post.date} class={meta}>
-        {post.date}
+      <time datetime={toISODate(post.date)} class={metaText}>
+        {formatDisplayDate(post.date)}
       </time>
     )}
     {post.description && <p class={description}>{post.description}</p>}

@@ -6,6 +6,8 @@ import Time from '../atoms/$Time';
 import { LatestPosts } from '../organisms/LatestPosts';
 import { LabsShowcase } from '../organisms/LabsShowcase';
 import type { ProjectSummary } from '../../lib/projects';
+import type { HomeHeroContent } from '../../lib/homeContent';
+import { homeHeroContent as defaultHeroContent } from '../../lib/homeContent';
 
 const wrapperStyle = css`
   display: flex;
@@ -28,12 +30,14 @@ type HomePageProps = {
   showClock?: boolean;
   latestPosts: PostSummary[];
   projects: ProjectSummary[];
+  heroContent?: HomeHeroContent;
 };
 
 export const HomePage: FC<HomePageProps> = ({
   showClock = false,
   latestPosts,
   projects,
+  heroContent = defaultHeroContent,
 }) => (
   <div class={wrapperStyle}>
     {showClock && (
@@ -41,20 +45,7 @@ export const HomePage: FC<HomePageProps> = ({
         <Time />
       </div>
     )}
-    <FooterBadge
-      headingPrimary="Trying Anyway"
-      headingSecondary="Tiny Experiments"
-      headingAccent="Messy but Curious"
-      editionLabel="Develop Edition"
-      footerText="Crafted For Curious Minds"
-      metaSections={[
-        { label: 'IDEA SOURCE', value: 'HISTORICAL CONTEXT', variant: 'script' },
-        { label: 'CRAFTED BY', value: 'tokec', variant: 'signature' },
-        { label: 'STATE', value: 'IN PROGRESS', variant: 'script' },
-      ]}
-      ariaLabel="Trying Anyway — Tiny Experiments — Messy but Curious"
-      scale="hero"
-    />
+    <FooterBadge {...heroContent} />
     <LatestPosts posts={latestPosts} />
     <LabsShowcase projects={projects} />
   </div>

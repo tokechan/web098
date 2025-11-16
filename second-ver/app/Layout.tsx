@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'hono/jsx';
-import { Link, Script } from 'honox/server';
+import { Script } from 'honox/server';
 import { Style } from 'hono/css';
 import { Layout as SiteLayout } from './components/templates/Layout';
 
