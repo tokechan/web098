@@ -7,7 +7,6 @@ import mdx from '@mdx-js/rollup';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import rehypePrettyCode from 'rehype-pretty-code';
-import tailwindcss from '@tailwindcss/vite';
 
 const entry = './app/server.ts';
 
@@ -40,6 +39,5 @@ export default defineConfig({
     }),
     ssg({ entry }),
     build(),
-    tailwindcss(),
   ],
 });
