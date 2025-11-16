@@ -1,5 +1,6 @@
 import type { ErrorHandler } from 'hono';
 import { css } from 'hono/css';
+import { paths } from '../lib/paths';
 
 const wrapper = css`
   min-height: 40vh;
@@ -21,7 +22,7 @@ const handler: ErrorHandler = (e, c) => {
     <section class={wrapper}>
       <h1>Internal Server Error</h1>
       <p>申し訳ありませんが、エラーが発生しました。</p>
-      <a href="/">Back to home</a>
+      <a href={paths.home}>Back to home</a>
     </section>
   );
 };

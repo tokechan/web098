@@ -1,5 +1,6 @@
 import type { NotFoundHandler } from 'hono';
 import { css } from 'hono/css';
+import { paths } from '../lib/paths';
 
 const wrapper = css`
   min-height: 40vh;
@@ -17,7 +18,7 @@ const handler: NotFoundHandler = (c) => {
     <section class={wrapper}>
       <h1>Oops! Page not found.</h1>
       <p>お探しのページは存在しません。</p>
-      <a href="/">Back to home</a>
+      <a href={paths.home}>Back to home</a>
     </section>
   );
 };
