@@ -1,9 +1,15 @@
 
-/*
- * URL ビルダー関数（暫定実装）
- * TODO:
- * - パスの変更に合わせて修正
- * - ルーティングに依存しないようにする
- * - 不要になれば削除
- */
-export const postUrl = (slug: string) => `/blogs/${slug}`;
+export const paths = {
+  home: '/',
+  blogs: {
+    list: '/blogs',
+    detail: (slug: string) => `/blogs/${slug}`,
+  },
+  labs: {
+    list: '/labs',
+    detail: (slug: string) => `/labs/${slug}`,
+  },
+} as const;
+
+export const postUrl = (slug: string) => paths.blogs.detail(slug);
+export const labUrl = (slug: string) => paths.labs.detail(slug);

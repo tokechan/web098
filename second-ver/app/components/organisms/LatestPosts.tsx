@@ -3,6 +3,7 @@ import type { FC } from 'hono/jsx';
 import type { PostSummary } from '../../lib/posts';
 import { PostPreview } from '../molecules/PostPreview';
 import { SectionHeader } from '../molecules/SectionHeader';
+import { paths } from '../../lib/paths';
 
 const section = css`
   display: grid;
@@ -21,7 +22,7 @@ type LatestPostsProps = {
 
 export const LatestPosts: FC<LatestPostsProps> = ({ posts }) => (
   <section class={section} aria-label="Latest blog posts">
-    <SectionHeader title="Latest Blogs" cta={{ href: '/blogs', label: 'View all' }} />
+    <SectionHeader title="Latest Blogs" cta={{ href: paths.blogs.list, label: 'View all' }} />
     <div class={grid}>
       {posts.length === 0 ? (
         <p>記事がまだありません。</p>
