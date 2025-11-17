@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
 // NOTE: Before running `wrangler dev`, a human operator must set OPENAI_API_KEY
 // using `wrangler secret put OPENAI_API_KEY`. Do not commit actual secrets.
@@ -7,19 +7,36 @@ type Bindings = {
   OPENAI_API_KEY?: string;
 };
 
-const AUDIO_FIELD = 'audio';
-const TRANSCRIBE_MODEL = 'gpt-4o-transcribe';
-const MDX_MODEL = 'gpt-4o-mini';
-const OPENAI_BASE_URL = 'https://api.openai.com/v1';
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "http://localhost:5173",
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+const AUDIO_FIELD = "audio";
+const TRANSCRIBE_MODEL = "gpt-4o-transcribe";
+const MDX_MODEL = "gpt-4o-mini";
+const OPENAI_BASE_URL = "https://api.openai.com/v1";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.post('/api/audio-blog', async (c) => {
+app.options("/api/audio-blog", (c) => c.text("ok", 204, CORS_HEADERS));
+
+const withCors = (response: Response) => {
+  Object.entries(CORS_HEADERS).forEach(([key, value]) =>
+    response.headers.set(key, value)
+  );
+  return response;
+};
+
+app.post("/api/audio-blog", async (c) => {
   const apiKey = c.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return c.text(
-      'Missing OPENAI_API_KEY binding. Set it locally with `wrangler secret put OPENAI_API_KEY`.',
-      500
+    return withCors(
+      c.text(
+        "Missing OPENAI_API_KEY binding. Set it locally with `wrangler secret put OPENAI_API_KEY`.",
+        500
+      )
     );
   }
 
@@ -27,80 +44,104 @@ app.post('/api/audio-blog', async (c) => {
   const audioFile = formData.get(AUDIO_FIELD);
 
   if (!(audioFile instanceof File)) {
-    return c.text('Expected multipart field "audio" containing a file.', 400);
+    return withCors(c.text('Expected multipart field "audio" containing a file.', 400));
   }
 
   try {
     const transcript = await transcribeAudio(audioFile, apiKey);
     if (!transcript?.trim()) {
-      throw new Error('Transcription response was empty.');
+      throw new Error("Transcription response was empty.");
     }
 
     const mdx = await generateMdxFromTranscript(transcript, apiKey);
-    return c.text(mdx.trim());
+    return withCors(c.text(mdx.trim()));
   } catch (error) {
-    console.error('audio-blog worker', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return c.text(`Audio blog worker error: ${message}`, 500);
+    const normalizedError =
+      error instanceof Error
+        ? { message: error.message, stack: error.stack }
+        : { error: String(error) };
+    console.error("audio-blog worker error", normalizedError);
+
+    if (import.meta.env?.DEV) {
+      const body = JSON.stringify(
+        {
+          error: "Audio blog worker failed",
+          details: normalizedError,
+        },
+        null,
+        2
+      );
+      return withCors(c.text(body, 500));
+    }
+
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return withCors(c.text(`Audio blog worker error: ${message}`, 500));
   }
 });
 
 async function transcribeAudio(file: File, apiKey: string): Promise<string> {
   const form = new FormData();
-  form.append('model', TRANSCRIBE_MODEL);
-  form.append('file', file, file.name || 'recording.webm');
+  form.append("model", TRANSCRIBE_MODEL);
+  form.append("file", file, file.name || "recording.webm");
 
   const response = await fetch(`${OPENAI_BASE_URL}/audio/transcriptions`, {
-    method: 'POST',
+    method: "POST",
     headers: buildAuthHeaders(apiKey),
     body: form,
   });
 
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => '');
+    const errorBody = await response.text().catch(() => "");
+    console.error("transcription failed", {
+      status: response.status,
+      errorBody,
+    });
     throw new Error(`Transcription failed: ${response.status} ${errorBody}`);
   }
 
   const payload = (await response.json()) as { text?: string };
-  return payload.text ?? '';
+  return payload.text ?? "";
 }
 
-async function generateMdxFromTranscript(transcript: string, apiKey: string): Promise<string> {
-  const isoDate = new Date().toISOString().split('T')[0] ?? '2025-01-01';
+async function generateMdxFromTranscript(
+  transcript: string,
+  apiKey: string
+): Promise<string> {
+  const isoDate = new Date().toISOString().split("T")[0] ?? "2025-01-01";
 
   const systemPrompt =
-    'You are an assistant that turns clean transcripts into polished MDX blog articles with YAML frontmatter.';
+    "You are an assistant that turns clean transcripts into polished MDX blog articles with YAML frontmatter.";
 
   const response = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       ...buildAuthHeaders(apiKey),
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       model: MDX_MODEL,
       temperature: 0.7,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: "system", content: systemPrompt },
         {
-          role: 'user',
+          role: "user",
           content:
-            'Use the transcript below to write an MDX article. Follow this format exactly:\n' +
-            '---\n' +
-            'title: <concise title>\n' +
+            "Use the transcript below to write an MDX article. Follow this format exactly:\n" +
+            "---\n" +
+            "title: <concise title>\n" +
             `date: ${isoDate}\n` +
-            'summary: <2 sentences>\n' +
-            'tags:\n' +
-            '  - audio\n' +
-            '  - autogenerated\n' +
-            '---\n\n' +
-            '## Introduction\n' +
-            '<hook paragraph>\n\n' +
-            '## Key Ideas\n' +
-            '- bullet list with highlights\n\n' +
-            '## Takeaways\n' +
-            'Short closing paragraph.\n\n' +
-            'Transcript:\n\n' +
+            "summary: <2 sentences>\n" +
+            "tags:\n" +
+            "  - audio\n" +
+            "  - autogenerated\n" +
+            "---\n\n" +
+            "## Introduction\n" +
+            "<hook paragraph>\n\n" +
+            "## Key Ideas\n" +
+            "- bullet list with highlights\n\n" +
+            "## Takeaways\n" +
+            "Short closing paragraph.\n\n" +
+            "Transcript:\n\n" +
             transcript,
         },
       ],
@@ -108,7 +149,11 @@ async function generateMdxFromTranscript(transcript: string, apiKey: string): Pr
   });
 
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => '');
+    const errorBody = await response.text().catch(() => "");
+    console.error("mdx generation failed", {
+      status: response.status,
+      errorBody,
+    });
     throw new Error(`MDX generation failed: ${response.status} ${errorBody}`);
   }
 
@@ -117,7 +162,7 @@ async function generateMdxFromTranscript(transcript: string, apiKey: string): Pr
   };
   const mdx = payload.choices?.[0]?.message?.content;
   if (!mdx) {
-    throw new Error('MDX generation returned no content.');
+    throw new Error("MDX generation returned no content.");
   }
 
   return mdx;
