@@ -24,9 +24,11 @@ const tagList = css`
 
 const tag = css`
   font-size: 0.875rem;
-  padding: 0.2rem 0.5rem;
-  border: 1px solid rgb(139, 250, 35);
+  padding: 0.2rem 0.6rem;
   border-radius: 0.35rem;
+  background: rgba(63, 112, 77, 0.1); /* Blogs ナビ背景に合わせた淡グリーン */
+  color: var(--color-accent);
+  border: 1px solid rgba(63, 112, 77, 0.18);
 `;
 
 export default createRoute(async (c) => {
