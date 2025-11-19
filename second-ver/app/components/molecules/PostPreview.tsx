@@ -11,7 +11,7 @@ const card = css`
   gap: 0.5rem;
   padding: 1.1rem;
   border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--color-bg); /* TRYING ANYWAY セクションと同じトーン */
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 
   &:hover {
