@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "audio-blog-worker",
+  "main": "src/features/audio-blog/worker.ts",
+  "compatibility_date": "2025-10-04",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ドメインを指定するまでコメントアウト
+  // "routes": [
+  //   {
+  //     "pattern": "example.com/api/audio-blog*",
+  //     "zone_name": "example.com"
+  //   }
+  // ],
+  "dev": {
+    "port": 8788,
+    "local_protocol": "http"
+  },
+  "vars": {
+    // Worker 側では env.OPENAI_API_KEY として参照可能
+  }
+}

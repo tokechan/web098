@@ -176,7 +176,7 @@ Validation Steps:
 
 Start the local development environment.
 In the project root, run:
-npm run dev
+pnpm dev
 and in a separate terminal:
 wrangler dev
 Expected behavior:

@@ -9,8 +9,14 @@ import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import rehypePrettyCode from 'rehype-pretty-code';
 
 const entry = './app/server.ts';
+const AUDIO_WORKER_PROXY = 'http://127.0.0.1:8788';
 
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api/audio-blog': AUDIO_WORKER_PROXY,
+    },
+  },
   plugins: [
     honox({
       devServer: { adapter },

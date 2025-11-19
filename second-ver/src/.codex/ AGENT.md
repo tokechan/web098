@@ -188,11 +188,11 @@ No new MDX plugins without approval.
 
 ## Allowed
 
-- `npm run dev`
-- `npm run build`
-- `npm run lint`
-- `npm run lint --fix`
-- `npm run preview`
+- `pnpm dev`
+- `pnpm build`
+- `pnpm lint`
+- `pnpm lint --fix`
+- `pnpm preview`
 
 ## Forbidden
 

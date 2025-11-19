@@ -121,8 +121,8 @@ If it does, the agent must describe human instructions and then continue with th
 Provide exact local-only commands required for development, never deployment.
 
 Allowed examples:
-npm install
-npm run dev
+pnpm install
+pnpm dev
 
 Expected output example (keep short):
 Local dev server running at [http://localhost:5173/](http://localhost:5173/)
