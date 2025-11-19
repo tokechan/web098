@@ -1,4 +1,6 @@
-# my-hono
+# my-hono (ver1)
+
+## これはボツ
 
 HonoX（Hono + Islands Architecture）を使用したブログアプリケーション。Cloudflare Workers/Pages にデプロイ可能な SSR フレームワークで構築されています。
 
